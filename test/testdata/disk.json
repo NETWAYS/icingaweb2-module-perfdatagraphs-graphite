@@ -1,0 +1,86 @@
+[
+  {
+    "target": "icinga2.homestead.services.disk__.disk.perfdata._.crit",
+    "datapoints": [
+      [
+        90198000000,
+        1731838560
+      ],
+      [
+        90198000000,
+        1731838620
+      ],
+      [
+        90198000000,
+        1731838680
+      ],
+      [
+        90198000000,
+        1731838740
+      ],
+      [
+        90198000000,
+        1731838800
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.disk__.disk.perfdata._.crit"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.disk__.disk.perfdata._.value",
+    "datapoints": [
+      [
+        14081000000,
+        1731838560
+      ],
+      [
+        14081000000,
+        1731838620
+      ],
+      [
+        14081000000,
+        1731838680
+      ],
+      [
+        14081000000,
+        1731838740
+      ],
+      [
+        14081000000,
+        1731838800
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.disk__.disk.perfdata._.value"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.disk__.disk.perfdata._.warn",
+    "datapoints": [
+      [
+        80176000000,
+        1731838560
+      ],
+      [
+        80176000000,
+        1731838620
+      ],
+      [
+        80176000000,
+        1731838680
+      ],
+      [
+        80176000000,
+        1731838740
+      ],
+      [
+        80176000000,
+        1731838800
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.disk__.disk.perfdata._.warn"
+    }
+  }
+]

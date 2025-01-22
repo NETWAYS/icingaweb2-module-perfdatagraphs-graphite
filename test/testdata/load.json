@@ -1,0 +1,254 @@
+[
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load1.crit",
+    "datapoints": [
+      [
+        10,
+        1731848160
+      ],
+      [
+        10,
+        1731848220
+      ],
+      [
+        10,
+        1731848280
+      ],
+      [
+        10,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load1.crit"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load1.value",
+    "datapoints": [
+      [
+        0.33,
+        1731848160
+      ],
+      [
+        0.31,
+        1731848220
+      ],
+      [
+        0.15,
+        1731848280
+      ],
+      [
+        0.28,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load1.value"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load1.warn",
+    "datapoints": [
+      [
+        5,
+        1731848160
+      ],
+      [
+        5,
+        1731848220
+      ],
+      [
+        5,
+        1731848280
+      ],
+      [
+        5,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load1.warn"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load5.crit",
+    "datapoints": [
+      [
+        6,
+        1731848160
+      ],
+      [
+        6,
+        1731848220
+      ],
+      [
+        6,
+        1731848280
+      ],
+      [
+        6,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load5.crit"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load5.value",
+    "datapoints": [
+      [
+        0.33,
+        1731848160
+      ],
+      [
+        0.34,
+        1731848220
+      ],
+      [
+        0.29,
+        1731848280
+      ],
+      [
+        0.3,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load5.value"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load5.warn",
+    "datapoints": [
+      [
+        4,
+        1731848160
+      ],
+      [
+        4,
+        1731848220
+      ],
+      [
+        4,
+        1731848280
+      ],
+      [
+        4,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load5.warn"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load15.crit",
+    "datapoints": [
+      [
+        4,
+        1731848160
+      ],
+      [
+        4,
+        1731848220
+      ],
+      [
+        4,
+        1731848280
+      ],
+      [
+        4,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load15.crit"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load15.value",
+    "datapoints": [
+      [
+        0.29,
+        1731848160
+      ],
+      [
+        0.29,
+        1731848220
+      ],
+      [
+        0.27,
+        1731848280
+      ],
+      [
+        0.28,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load15.value"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.load.load.perfdata.load15.warn",
+    "datapoints": [
+      [
+        3,
+        1731848160
+      ],
+      [
+        3,
+        1731848220
+      ],
+      [
+        3,
+        1731848280
+      ],
+      [
+        3,
+        1731848340
+      ],
+      [
+        null,
+        1731848400
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.load.load.perfdata.load15.warn"
+    }
+  }
+]

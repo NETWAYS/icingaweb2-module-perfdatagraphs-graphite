@@ -1,0 +1,58 @@
+[
+  {
+    "target": "icinga2.homestead.services.apt.apt.perfdata.available_upgrades.value",
+    "datapoints": [
+      [
+        626,
+        1731838620
+      ],
+      [
+        626,
+        1731838680
+      ],
+      [
+        626,
+        1731838740
+      ],
+      [
+        626,
+        1731838800
+      ],
+      [
+        626,
+        1731838860
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.apt.apt.perfdata.available_upgrades.value"
+    }
+  },
+  {
+    "target": "icinga2.homestead.services.apt.apt.perfdata.critical_updates.value",
+    "datapoints": [
+      [
+        211,
+        1731838620
+      ],
+      [
+        211,
+        1731838680
+      ],
+      [
+        211,
+        1731838740
+      ],
+      [
+        211,
+        1731838800
+      ],
+      [
+        211,
+        1731838860
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.services.apt.apt.perfdata.critical_updates.value"
+    }
+  }
+]

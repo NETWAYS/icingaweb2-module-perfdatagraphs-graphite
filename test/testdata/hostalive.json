@@ -1,0 +1,170 @@
+[
+  {
+    "target": "icinga2.homestead.host.hostalive.perfdata.pl.crit",
+    "datapoints": [
+      [
+        100,
+        1731848460
+      ],
+      [
+        100,
+        1731848520
+      ],
+      [
+        100,
+        1731848580
+      ],
+      [
+        100,
+        1731848640
+      ],
+      [
+        null,
+        1731848700
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.host.hostalive.perfdata.pl.crit"
+    }
+  },
+  {
+    "target": "icinga2.homestead.host.hostalive.perfdata.pl.value",
+    "datapoints": [
+      [
+        0,
+        1731848460
+      ],
+      [
+        0,
+        1731848520
+      ],
+      [
+        0,
+        1731848580
+      ],
+      [
+        0,
+        1731848640
+      ],
+      [
+        null,
+        1731848700
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.host.hostalive.perfdata.pl.value"
+    }
+  },
+  {
+    "target": "icinga2.homestead.host.hostalive.perfdata.pl.warn",
+    "datapoints": [
+      [
+        80,
+        1731848460
+      ],
+      [
+        80,
+        1731848520
+      ],
+      [
+        80,
+        1731848580
+      ],
+      [
+        80,
+        1731848640
+      ],
+      [
+        null,
+        1731848700
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.host.hostalive.perfdata.pl.warn"
+    }
+  },
+  {
+    "target": "icinga2.homestead.host.hostalive.perfdata.rta.crit",
+    "datapoints": [
+      [
+        5,
+        1731848460
+      ],
+      [
+        5,
+        1731848520
+      ],
+      [
+        5,
+        1731848580
+      ],
+      [
+        5,
+        1731848640
+      ],
+      [
+        null,
+        1731848700
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.host.hostalive.perfdata.rta.crit"
+    }
+  },
+  {
+    "target": "icinga2.homestead.host.hostalive.perfdata.rta.value",
+    "datapoints": [
+      [
+        7,
+        1731848460
+      ],
+      [
+        5,
+        1731848520
+      ],
+      [
+        8,
+        1731848580
+      ],
+      [
+        7,
+        1731848640
+      ],
+      [
+        null,
+        1731848700
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.host.hostalive.perfdata.rta.value"
+    }
+  },
+  {
+    "target": "icinga2.homestead.host.hostalive.perfdata.rta.warn",
+    "datapoints": [
+      [
+        3,
+        1731848460
+      ],
+      [
+        3,
+        1731848520
+      ],
+      [
+        3,
+        1731848580
+      ],
+      [
+        3,
+        1731848640
+      ],
+      [
+        null,
+        1731848700
+      ]
+    ],
+    "tags": {
+      "name": "icinga2.homestead.host.hostalive.perfdata.rta.warn"
+    }
+  }
+]
