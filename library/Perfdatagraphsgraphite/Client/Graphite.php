@@ -30,10 +30,11 @@ class Graphite
     {
         $config = self::loadConfig();
 
-        // TODO Auth and TLS configuration
         $client = new Client([
-            'base_uri' => $config['graphite_api_url'],
-            'timeout' => $config['graphite_api_timeout'],
+            'base_uri' => $config['api_url'],
+            'timeout' => $config['api_timeout'],
+            'auth' => [$config['api_username'], $config['api_password']],
+            'verify' => $config['api_tls_insecure']
         ]);
 
         // Sanitize query parameters for Graphite
@@ -102,23 +103,29 @@ class Graphite
     public static function loadConfig(Config $moduleConfig = null): array
     {
         $default = [
-            'graphite_api_url' => 'http://localhost:8081',
-            'graphite_api_timeout' => '10',
+            'api_url' => 'http://localhost:8081',
+            'api_timeout' => '10',
+            'api_username' => '',
+            'api_password' => '',
+            'api_tls_insecure' => false,
         ];
 
         // Try to load the configuration
         if ($moduleConfig === null) {
             try {
-                $moduleConfig = Config::module('graphsgraphite');
+                $moduleConfig = Config::module('perfdatagraphsgraphite');
             } catch (Exception $e) {
-                Logger::error('Failed to load Graphs Graphite module configuration: %s', $e);
+                Logger::error('Failed to load Perfdata Graphs Graphite module configuration: %s', $e);
                 return $default;
             }
         }
 
         $config = [
-            'graphite_api_url' => rtrim($moduleConfig->get('general', 'graphite_api_url', $default['graphite_api_url']), '/'),
-            'graphite_api_timeout' => $moduleConfig->get('general', 'graphite_api_timeout', $default['graphite_api_timeout']),
+            'api_url' => rtrim($moduleConfig->get('graphite', 'api_url', $default['api_url']), '/'),
+            'api_timeout' => $moduleConfig->get('graphite', 'api_timeout', $default['api_timeout']),
+            'api_username' => $moduleConfig->get('graphite', 'api_username', $default['api_username']),
+            'api_password' => $moduleConfig->get('graphite', 'api_password', $default['api_password']),
+            'api_tls_insecure' => (bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']),
         ];
 
         return $config;
