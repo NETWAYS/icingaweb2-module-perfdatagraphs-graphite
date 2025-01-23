@@ -13,12 +13,15 @@ final class GraphiteTest extends TestCase
 {
     public function test_loadconfig_withconfig()
     {
-        $c = Config::fromArray(['general' => ['graphite_api_url' => 'http://foobar', 'graphite_api_timeout' => '123']]);
+        $c = Config::fromArray(['graphite' => ['api_url' => 'http://foobar', 'api_timeout' => '123']]);
         $actual = Graphite::loadConfig($c);
 
         $expected = [
-            'graphite_api_url' => 'http://foobar',
-            'graphite_api_timeout' => '123'
+            'api_url' => 'http://foobar',
+            'api_timeout' => '123',
+            'api_username' => '',
+            'api_password' => '',
+            'api_tls_insecure' => false
         ];
 
         $this->assertEquals($expected, $actual);
@@ -30,8 +33,11 @@ final class GraphiteTest extends TestCase
         $actual = Graphite::loadConfig($c);
 
         $expected = [
-            'graphite_api_url' => 'http://localhost:8081',
-            'graphite_api_timeout' => '10'
+            'api_url' => 'http://localhost:8081',
+            'api_timeout' => '10',
+            'api_username' => '',
+            'api_password' => '',
+            'api_tls_insecure' => false
         ];
 
         $this->assertEquals($expected, $actual);
