@@ -24,6 +24,7 @@ class Graphite
      * @param string $serviceName service name for the performance data query
      * @param string $checkCommand checkcommand name for the performance data query
      * @param string $from specifies the beginning for which to fetch the data
+     * @param array $metrics list of metrics to return
      * @return array
      */
     public function request(string $hostName, string $serviceName, string $checkCommand, string $from, array $metrics): array
@@ -44,7 +45,8 @@ class Graphite
 
         $metricNames = '*';
         if (!empty($metrics)) {
-            $metricNames = '{'. implode(',', $metrics) . '}';
+            $m = array_map([$this, 'sanitizePath'], $metrics);
+            $metricNames = '{'. implode(',', $m) . '}';
         }
 
         // Build the query string based on the service we are given
