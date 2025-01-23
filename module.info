@@ -3,3 +3,4 @@ Version: 0.1.0
 Requires:
   Modules: perfdatagraphs
 Description: Graphite Backend for Icinga Web Performance Data Graphs
+ This module can fetch data from Graphite for Icinga Web Performance Data Graphs
