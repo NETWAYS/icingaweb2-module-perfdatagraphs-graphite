@@ -14,7 +14,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
 {
     public function init()
     {
-        $this->setName('form_config_resource');
+        $this->setName('form_config_perfdatagraphite');
         $this->setSubmitLabel($this->translate('Save Changes'));
         $this->setValidatePartial(true);
     }
@@ -55,7 +55,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
 
         $this->addElement(
             'submit',
-            'resource_validation',
+            'backend_validation',
             [
                 'ignore' => true,
                 'label' => $this->translate('Validate Configuration'),
@@ -64,20 +64,20 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
             ]
         );
 
-        $this->setAttrib('data-progress-element', 'resource-progress');
+        $this->setAttrib('data-progress-element', 'backend-progress');
         $this->addElement(
             'note',
-            'resource-progress',
+            'backend-progress',
             [
                 'decorators' => [
                     'ViewHelper',
-                    ['Spinner', ['id' => 'resource-progress']]
+                    ['Spinner', ['id' => 'backend-progress']]
                 ]
             ]
         );
 
         $this->addDisplayGroup(
-            ['btn_submit', 'resource_validation', 'resource-progress'],
+            ['btn_submit', 'backend_validation', 'backend-progress'],
             'submit_validation',
             [
                 'decorators' => [
@@ -92,7 +92,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
 
     public function isValidPartial(array $formData)
     {
-        if ($this->getElement('resource_validation')->isChecked() && parent::isValid($formData)) {
+        if ($this->getElement('backend_validation')->isChecked() && parent::isValid($formData)) {
             $validation = static::validateFormData($this);
             if ($validation !== null) {
                 $this->addElement(
