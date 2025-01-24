@@ -26,13 +26,17 @@ class PerfdataSource extends PerfdataSourceHook
         try {
             $client = Graphite::fromConfig();
         } catch (Exception $e) {
-            // TODO What should we return here?
-            return [];
+            return [
+                'error' => [
+                    'message' => 'Error while loading Graphite client from configuration',
+                    'details' => $e->getMessage(),
+                ]
+            ];
         }
         $response = $client->render($hostName, $serviceName, $checkCommand, $from, $metrics);
         // Transform into the PerfdataSourceHook format
         $d = Transformer::transform($response, $checkCommand);
 
-        return $d;
+        return ['data' => $d];
     }
 }
