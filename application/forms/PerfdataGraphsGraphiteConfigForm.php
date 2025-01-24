@@ -128,7 +128,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
     public static function validateFormData($form): array
     {
         $baseURI = $form->getValue('graphite_api_url', 'http://localhost:8081');
-        $timeout = $form->getValue('graphite_api_timeout', 10);
+        $timeout = (int) $form->getValue('graphite_api_timeout', 10);
         $username = $form->getValue('graphite_api_username', '');
         $password = $form->getValue('graphite_api_password', '');
         $tlsVerify = (bool) $form->getValue('graphite_api_tls_insecure', false);
