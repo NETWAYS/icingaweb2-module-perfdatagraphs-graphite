@@ -2,10 +2,11 @@
 
 namespace Icinga\Module\Perfdatagraphsgraphite\Forms;
 
+use Icinga\Module\Perfdatagraphsgraphite\Client\Graphite;
+
 use Icinga\Forms\ConfigForm;
 
 use Exception;
-use GuzzleHttp\Client;
 
 /**
  * PerfdataGraphsGraphiteConfigForm represents the configuration form for the PerfdataGraphs Graphite Module.
@@ -101,7 +102,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
                     [
                         'order' => 0,
                         'value' => '<strong>' . $this->translate('Validation Log') . "</strong>\n\n"
-                            . join("\n", $validation['output'] ?? []),
+                            . $validation['output'],
                         'decorators' => [
                             'ViewHelper',
                             ['HtmlTag', ['tag' => 'pre', 'class' => 'log-output']],
@@ -124,25 +125,22 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         return true;
     }
 
-    public static function validateFormData($form)
+    public static function validateFormData($form): array
     {
+        $baseURI = $form->getValue('graphite_api_url', 'http://localhost:8081');
+        $timeout = $form->getValue('graphite_api_timeout', 10);
+        $username = $form->getValue('graphite_api_username', '');
+        $password = $form->getValue('graphite_api_password', '');
+        $tlsVerify = (bool) $form->getValue('graphite_api_tls_insecure', false);
+
         try {
-            $client = new Client([
-                'base_uri' => $form->getValue('graphite_api_url', 'http://localhost:8081'),
-                'timeout' => (int) $form->getValue('graphite_api_timeout', 10),
-                'verify' => (bool) $form->getValue('graphite_api_tls_insecure'),
-                'auth' => [$form->getValue('graphite_api_username'), $form->getValue('graphite_api_password')]
-            ]);
-
-            $response = $client->get('/metrics');
-        } catch (\Exception $e) {
-            return ['error' => 'Connection not successful', 'output' => [$e]];
+            $c = new Graphite($baseURI, $username, $password, $timeout, $tlsVerify);
+        } catch (Exception $e) {
+            return ['output' => 'General error: ' . $e->getMessage(), 'error' => true];
         }
 
-        if ($response->getStatusCode() == 200) {
-            return ['output' => ['Connection successful']];
-        }
+        $status = $c->status();
 
-        return ['error' => 'Connection not successful', 'output' => []];
+        return $status;
     }
 }

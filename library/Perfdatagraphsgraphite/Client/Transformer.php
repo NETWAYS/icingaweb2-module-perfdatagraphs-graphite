@@ -5,6 +5,8 @@ namespace Icinga\Module\Perfdatagraphsgraphite\Client;
 use Generator;
 use SplFixedArray;
 
+use GuzzleHttp\Psr7\Response;
+
 /**
  * Transformer handles all data transformation.
  */
@@ -142,15 +144,19 @@ class Transformer
      * transform takes the Graphite API response and transforms it into the
      * output format we need.
      *
-     * @param array $data the data to transform
+     * @param GuzzleHttp\Psr7\Response $response the data to transform
      * @param string $checkCommand name of the checkcommand, could be useful
      * @return array
      */
-    public static function transform(array $data, string $checkCommand = ''): array
+    public static function transform(Response $response, string $checkCommand = ''): array
     {
-        if (empty($data)) {
+        if (empty($response)) {
             return [];
         }
+
+        // Parse the JSON response
+        // TODO: Might be best to stream the data, instead if one big GULP
+        $data = json_decode($response->getBody(), true);
 
         $d = [];
 

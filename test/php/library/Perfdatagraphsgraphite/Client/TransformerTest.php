@@ -6,6 +6,8 @@ use Icinga\Module\Perfdatagraphsgraphite\Client\Transformer;
 
 use SplFixedArray;
 
+use GuzzleHttp\Psr7\Response;
+
 use PHPUnit\Framework\TestCase;
 
 final class TransformerTest extends TestCase
@@ -14,12 +16,20 @@ final class TransformerTest extends TestCase
     {
         $data = [];
 
+        $response = new Response(
+            404
+        );
+
         if (file_exists($file)) {
             $jsonContent = file_get_contents($file);
-            $data = json_decode($jsonContent, true);
+            $response = new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                $jsonContent,
+            );
         }
 
-        return $data;
+        return $response;
     }
 
     public function test_updatetitle()
@@ -116,9 +126,6 @@ final class TransformerTest extends TestCase
             ]
         ];
 
-        // var_dump($actual[1]['series'][2]);
-
         $this->assertEquals($expected, $actual);
     }
-
 }

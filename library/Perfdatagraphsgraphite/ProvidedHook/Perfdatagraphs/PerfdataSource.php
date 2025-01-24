@@ -8,6 +8,7 @@ use Icinga\Module\Perfdatagraphsgraphite\Client\Transformer;
 use Icinga\Module\Perfdatagraphs\Hook\PerfdataSourceHook;
 
 use DateTime;
+use Exception;
 
 class PerfdataSource extends PerfdataSourceHook
 {
@@ -22,10 +23,15 @@ class PerfdataSource extends PerfdataSourceHook
         $now = new DateTime();
         $from = Graphite::parseDuration($now, $duration);
         // Create a client and get the data from the API
-        $client = new Graphite();
-        $data = $client->request($hostName, $serviceName, $checkCommand, $from, $metrics);
+        try {
+            $client = Graphite::fromConfig();
+        } catch (Exception $e) {
+            // TODO What should we return here?
+            return [];
+        }
+        $response = $client->render($hostName, $serviceName, $checkCommand, $from, $metrics);
         // Transform into the PerfdataSourceHook format
-        $d = Transformer::transform($data, $checkCommand);
+        $d = Transformer::transform($response, $checkCommand);
 
         return $d;
     }
