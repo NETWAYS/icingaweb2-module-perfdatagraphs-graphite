@@ -3,7 +3,6 @@
 namespace Tests\Icinga\Module\Perfdatagraphsgraphite\Client;
 
 use Icinga\Module\Perfdatagraphsgraphite\Client\Graphite;
-use Icinga\Application\Config;
 
 use DateTime;
 
@@ -11,38 +10,6 @@ use PHPUnit\Framework\TestCase;
 
 final class GraphiteTest extends TestCase
 {
-    public function test_loadconfig_withconfig()
-    {
-        $c = Config::fromArray(['graphite' => ['api_url' => 'http://foobar', 'api_timeout' => '123']]);
-        $actual = Graphite::loadConfig($c);
-
-        $expected = [
-            'api_url' => 'http://foobar',
-            'api_timeout' => '123',
-            'api_username' => '',
-            'api_password' => '',
-            'api_tls_insecure' => false
-        ];
-
-        $this->assertEquals($expected, $actual);
-    }
-
-    public function test_loadconfig_withoutconfig()
-    {
-        $c = Config::fromArray(['no' => 'config']);
-        $actual = Graphite::loadConfig($c);
-
-        $expected = [
-            'api_url' => 'http://localhost:8081',
-            'api_timeout' => '10',
-            'api_username' => '',
-            'api_password' => '',
-            'api_tls_insecure' => false
-        ];
-
-        $this->assertEquals($expected, $actual);
-    }
-
     public function test_parseduration()
     {
         $now = new DateTime('1986-04-26 01:23:40');

@@ -6,6 +6,10 @@ use Icinga\Application\Config;
 use Icinga\Application\Logger;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ConnectException;
+
 use DateInterval;
 use DateTime;
 use Exception;
@@ -15,29 +19,60 @@ use Exception;
  */
 class Graphite
 {
-    protected const ENDPOINT = '/render';
+    protected const RENDER_ENDPOINT = '/render';
+    protected const METRICS_ENDPOINT = '/metrics';
+
+    /** @var $this \Icinga\Application\Modules\Module */
+    protected $client = null;
+
+    public function __construct(string $baseURI, string $username, string $password, int $timeout, bool $tlsVerify)
+    {
+        $this->client = new Client([
+            'base_uri' => $baseURI,
+            'timeout' => $timeout,
+            'auth' => [$username, $password],
+            'verify' => $tlsVerify
+        ]);
+    }
 
     /**
-     * request calls the Graphite Render HTTP API, decodes and returns the data.
+     * status calls the Graphite Metrics HTTP API to determine if Graphite is reachable.
+     *
+     * @return array
+     */
+    public function status(): array
+    {
+        try {
+            $response = $this->client->request('GET', $this::METRICS_ENDPOINT);
+            return ['output' =>  $response->getBody()->getContents()];
+        } catch (ConnectException $e) {
+            return ['output' => 'Connection error: ' . $e->getMessage(), 'error' => true];
+        } catch (RequestException $e) {
+            if ($e->hasResponse()) {
+                return ['output' => 'HTTP error: ' . $e->getResponse()->getStatusCode() . ' - ' .
+                                      $e->getResponse()->getReasonPhrase(), 'error' => true];
+            } else {
+                return ['output' => 'Request error: ' . $e->getMessage(), 'error' => true];
+            }
+        } catch (Exception $e) {
+            return ['output' => 'General error: ' . $e->getMessage(), 'error' => true];
+        }
+
+        return ['output' => 'Unknown error', 'error' => true];
+    }
+
+    /**
+     * render calls the Graphite Render HTTP API, decodes and returns the response.
      *
      * @param string $hostName host name for the performance data query
      * @param string $serviceName service name for the performance data query
      * @param string $checkCommand checkcommand name for the performance data query
      * @param string $from specifies the beginning for which to fetch the data
      * @param array $metrics list of metrics to return
-     * @return array
+     * @return Response
      */
-    public function request(string $hostName, string $serviceName, string $checkCommand, string $from, array $metrics): array
+    public function render(string $hostName, string $serviceName, string $checkCommand, string $from, array $metrics): Response
     {
-        $config = self::loadConfig();
-
-        $client = new Client([
-            'base_uri' => $config['api_url'],
-            'timeout' => $config['api_timeout'],
-            'auth' => [$config['api_username'], $config['api_password']],
-            'verify' => $config['api_tls_insecure']
-        ]);
-
         // Sanitize query parameters for Graphite
         $hostName = self::sanitizePath($hostName);
         $serviceName = self::sanitizePath($serviceName);
@@ -64,13 +99,9 @@ class Graphite
             ]
         ];
 
-        $response = $client->request('GET', $this::ENDPOINT, $query);
+        $response = $this->client->request('GET', $this::RENDER_ENDPOINT, $query);
 
-        // Parse the JSON response
-        // TODO: Might be best to stream the data, instead if one big GULP
-        $data = json_decode($response->getBody(), true);
-
-        return $data;
+        return $response;
     }
 
     /**
@@ -97,16 +128,16 @@ class Graphite
     }
 
     /**
-     * loadConfig fetches this module's configuration.
+     * fromConfig returns a new Graphite Client from this module's configuration
      *
      * @param Config $moduleConfig configuration to load (used for testing)
-     * @return array
+     * @return $this
      */
-    public static function loadConfig(Config $moduleConfig = null): array
+    public static function fromConfig(Config $moduleConfig = null)
     {
         $default = [
             'api_url' => 'http://localhost:8081',
-            'api_timeout' => '10',
+            'api_timeout' => 10,
             'api_username' => '',
             'api_password' => '',
             'api_tls_insecure' => false,
@@ -122,15 +153,13 @@ class Graphite
             }
         }
 
-        $config = [
-            'api_url' => rtrim($moduleConfig->get('graphite', 'api_url', $default['api_url']), '/'),
-            'api_timeout' => $moduleConfig->get('graphite', 'api_timeout', $default['api_timeout']),
-            'api_username' => $moduleConfig->get('graphite', 'api_username', $default['api_username']),
-            'api_password' => $moduleConfig->get('graphite', 'api_password', $default['api_password']),
-            'api_tls_insecure' => (bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']),
-        ];
+        $baseURI = rtrim($moduleConfig->get('graphite', 'api_url', $default['api_url']), '/');
+        $timeout = (int) $moduleConfig->get('graphite', 'api_timeout', $default['api_timeout']);
+        $username = $moduleConfig->get('graphite', 'api_username', $default['api_username']);
+        $password = $moduleConfig->get('graphite', 'api_password', $default['api_password']);
+        $tlsVerify = (bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']);
 
-        return $config;
+        return new static($baseURI, $username, $password, $timeout, $tlsVerify);
     }
 
     /**
@@ -149,7 +178,7 @@ class Graphite
             return '';
         }
 
-        // TODO extend this list to include all cases
+        // TODO: extend this list to include all cases
         $replace = [
             '/\s+/' => '_',
             '/\//' => '_',
