@@ -2,6 +2,10 @@
 
 namespace Icinga\Module\Perfdatagraphsgraphite\Client;
 
+use Icinga\Module\Perfdatagraphs\Model\PerfdataResponse;
+use Icinga\Module\Perfdatagraphs\Model\PerfdataSet;
+use Icinga\Module\Perfdatagraphs\Model\PerfdataSeries;
+
 use Generator;
 use SplFixedArray;
 
@@ -95,7 +99,6 @@ class Transformer
         // A dataset is single perfdata target, e.g. rta, pl, disk /.
         // A series is a list of datapoints with a label (value, warn, crit)
         foreach ($data as $dataset) {
-            $finalizedDataset = [];
             $name = $dataset['target'];
 
             // Only .value is a dataset for us
@@ -104,9 +107,7 @@ class Transformer
                 continue;
             }
 
-            $finalizedDataset = [
-                'title' => self::updateTitle($name, $checkCommand),
-            ];
+            $finalizedDataset = new PerfdataSet(self::updateTitle($name, $checkCommand));
 
             // Create the values and timestamp arrays for this dataset
             // Decided to use an SplFixedArray since there might be lots of data
@@ -118,8 +119,10 @@ class Transformer
                 $timestamps[$point[0]] = $point[2];
             }
 
-            $finalizedDataset['timestamps'] = $timestamps;
-            $finalizedDataset['series'][] = ['name' => 'value', 'data' => $values];
+            $valuesSeries = new PerfdataSeries('value', $values);
+
+            $finalizedDataset->setTimestamps($timestamps);
+            $finalizedDataset->addSeries($valuesSeries);
 
             // Get the warn and crit for this dataset and add it
             // Since for graphite it's a unrelated dateset, we gotta find them first.
@@ -127,13 +130,15 @@ class Transformer
             $warnName = preg_replace('/\.value$/', '.warn', $dataset['target']);
             $warnSeries = self::getSeries($data, $warnName);
             if (count($warnSeries) > 0) {
-                $finalizedDataset['series'][] = ['name' => 'warning', 'data' => $warnSeries];
+                $warnSeries = new PerfdataSeries('warning', $warnSeries);
+                $finalizedDataset->addSeries($warnSeries);
             }
 
             $critName = preg_replace('/\.value$/', '.crit', $dataset['target']);
             $critSeries = self::getSeries($data, $critName);
             if (count($critSeries) > 0) {
-                $finalizedDataset['series'][] = ['name' => 'critical', 'data' => $critSeries];
+                $critSeries = new PerfdataSeries('critical', $critSeries);
+                $finalizedDataset->addSeries($critSeries);
             }
 
             yield $finalizedDataset;
@@ -145,25 +150,25 @@ class Transformer
      * output format we need.
      *
      * @param GuzzleHttp\Psr7\Response $response the data to transform
-     * @param string $checkCommand name of the checkcommand, could be useful
-     * @return array
+     * @param string $checkCommand name of the checkcommand
+     * @return PerfdataResponse
      */
-    public static function transform(Response $response, string $checkCommand = ''): array
+    public static function transform(Response $response, string $checkCommand = ''): PerfdataResponse
     {
+        $pfr = new PerfdataResponse();
+
         if (empty($response)) {
-            return [];
+            return $pfr;
         }
 
         // Parse the JSON response
         // TODO: Might be best to stream the data, instead if one big GULP
         $data = json_decode($response->getBody(), true);
 
-        $d = [];
-
         foreach (self::getDataset($data, $checkCommand) as $dataset) {
-            $d[] = $dataset;
+            $pfr->addDataset($dataset);
         }
 
-        return $d;
+        return $pfr;
     }
 }
