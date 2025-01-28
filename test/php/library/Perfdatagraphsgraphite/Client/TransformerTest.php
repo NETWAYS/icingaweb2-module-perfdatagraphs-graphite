@@ -50,33 +50,9 @@ final class TransformerTest extends TestCase
         $input = $this->loadTestdata('test/testdata/apt.json');
 
         $actual = Transformer::transform($input);
+        $expected = '{"data":[{"title":"available_upgrades","unit":"","timestamps":[1731838620,1731838680,1731838740,1731838800,1731838860],"series":[{"name":"value","values":[626,626,626,626,626]}]},{"title":"critical_updates","unit":"","timestamps":[1731838620,1731838680,1731838740,1731838800,1731838860],"series":[{"name":"value","values":[211,211,211,211,211]}]}]}';
 
-        $expected = [
-            [
-                'title' => 'available_upgrades',
-                'timestamps' => SplFixedArray::fromArray([1731838620, 1731838680, 1731838740, 1731838800, 1731838860]),
-                'series' =>
-                    [
-                        [
-                            'name' => 'value',
-                            'data' => SplFixedArray::fromArray([626, 626, 626, 626, 626]),
-                        ],
-                    ]
-            ],
-            [
-                'title' => 'critical_updates',
-                'timestamps' => SplFixedArray::fromArray([1731838620, 1731838680, 1731838740, 1731838800, 1731838860]),
-                'series' =>
-                    [
-                        [
-                            'name' => 'value',
-                            'data' => SplFixedArray::fromArray([211, 211, 211, 211, 211]),
-                        ],
-                    ]
-            ]
-        ];
-
-        $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected, json_encode($actual));
     }
 
     public function test_transform_with_warn_and_crit()
@@ -85,47 +61,8 @@ final class TransformerTest extends TestCase
 
         $actual = Transformer::transform($input);
 
-        $expected = [
-            [
-                'title' => 'pl',
-                'timestamps' => SplFixedArray::fromArray([1731848460,1731848520,1731848580,1731848640,1731848700]),
-                'series' =>
-                    [
-                        [
-                            'name' => 'value',
-                            'data' => SplFixedArray::fromArray([0, 0, 0, 0, null]),
-                        ],
-                        [
-                            'name' => 'warning',
-                            'data' => SplFixedArray::fromArray([80, 80, 80, 80, null]),
-                        ],
-                        [
-                            'name' => 'critical',
-                            'data' => SplFixedArray::fromArray([100, 100, 100, 100, null]),
-                        ],
-                    ]
-            ],
-            [
-                'title' => 'rta',
-                'timestamps' => SplFixedArray::fromArray([1731848460,1731848520,1731848580,1731848640,1731848700]),
-                'series' =>
-                    [
-                        [
-                            'name' => 'value',
-                            'data' => SplFixedArray::fromArray([7,5,8,7,null]),
-                        ],
-                        [
-                            'name' => 'warning',
-                            'data' => SplFixedArray::fromArray([3,3,3,3,null]),
-                        ],
-                        [
-                            'name' => 'critical',
-                            'data' => SplFixedArray::fromArray([5,5,5,5,null]),
-                        ],
-                    ]
-            ]
-        ];
+        $expected = '{"data":[{"title":"pl","unit":"","timestamps":[1731848460,1731848520,1731848580,1731848640,1731848700],"series":[{"name":"value","values":[0,0,0,0,null]},{"name":"warning","values":[80,80,80,80,null]},{"name":"critical","values":[100,100,100,100,null]}]},{"title":"rta","unit":"","timestamps":[1731848460,1731848520,1731848580,1731848640,1731848700],"series":[{"name":"value","values":[7,5,8,7,null]},{"name":"warning","values":[3,3,3,3,null]},{"name":"critical","values":[5,5,5,5,null]}]}]}';
 
-        $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected, json_encode($actual));
     }
 }
