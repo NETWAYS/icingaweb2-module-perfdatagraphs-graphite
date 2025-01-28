@@ -99,7 +99,11 @@ class Graphite
             ]
         ];
 
-        $response = $this->client->request('GET', $this::RENDER_ENDPOINT, $query);
+        try {
+            $response = $this->client->request('GET', $this::RENDER_ENDPOINT, $query);
+        } catch (RequestException $e) {
+            return $e->getResponse();
+        }
 
         return $response;
     }
