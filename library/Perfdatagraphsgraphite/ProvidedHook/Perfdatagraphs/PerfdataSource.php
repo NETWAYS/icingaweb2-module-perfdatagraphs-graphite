@@ -6,7 +6,11 @@ use Icinga\Module\Perfdatagraphsgraphite\Client\Graphite;
 use Icinga\Module\Perfdatagraphsgraphite\Client\Transformer;
 
 use Icinga\Module\Perfdatagraphs\Hook\PerfdataSourceHook;
+use Icinga\Module\Perfdatagraphs\Model\PerfdataRequest;
 use Icinga\Module\Perfdatagraphs\Model\PerfdataResponse;
+
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ConnectException;
 
 use DateTime;
 use Exception;
@@ -18,11 +22,11 @@ class PerfdataSource extends PerfdataSourceHook
         return 'Graphite';
     }
 
-    public function fetchData(string $hostName, string $serviceName, string $checkCommand, string $duration, array $metrics): PerfdataResponse
+    public function fetchData(PerfdataRequest $req): PerfdataResponse
     {
         // Parse the duration
         $now = new DateTime();
-        $from = Graphite::parseDuration($now, $duration);
+        $from = Graphite::parseDuration($now, $req->getDuration());
 
         $perfdataresponse = new PerfdataResponse();
 
@@ -34,11 +38,41 @@ class PerfdataSource extends PerfdataSourceHook
             return $perfdataresponse;
         }
 
-        // Call render API to get HTTP response
-        $response = $client->render($hostName, $serviceName, $checkCommand, $from, $metrics);
+        // Let's fetch the data from the Graphite API
+        try {
+            // Call find API to get a list of the metrics
+            $metrics = $client->findMetrics(
+                $req->getHostname(),
+                $req->getServicename(),
+                $req->getCheckcommand(),
+                $from,
+                $req->getIncludeMetrics(),
+                $req->getExcludeMetrics()
+            );
+
+            // Call render API to get HTTP response
+            $response = $client->render(
+                $req->getHostname(),
+                $req->getServicename(),
+                $req->getCheckcommand(),
+                $from,
+                $metrics
+            );
+        } catch (ConnectException $e) {
+            $perfdataresponse->addError($e->getMessage());
+        } catch (RequestException $e) {
+            $perfdataresponse->addError($e->getMessage());
+        } catch (Exception $e) {
+            $perfdataresponse->addError($e->getMessage());
+        }
+
+        // Why even bother when we have errors here
+        if ($perfdataresponse->hasErrors()) {
+            return $perfdataresponse;
+        }
 
         // Transform into the PerfdataSourceHook format
-        $perfdataresponse = Transformer::transform($response, $checkCommand);
+        $perfdataresponse = Transformer::transform($response, $req->getCheckcommand());
 
         return $perfdataresponse;
     }

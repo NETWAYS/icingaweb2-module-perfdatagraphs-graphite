@@ -21,6 +21,7 @@ class Graphite
 {
     protected const RENDER_ENDPOINT = '/render';
     protected const METRICS_ENDPOINT = '/metrics';
+    protected const FIND_ENDPOINT = '/metrics/find';
 
     /** @var $this \Icinga\Application\Modules\Module */
     protected $client = null;
@@ -37,6 +38,7 @@ class Graphite
 
     /**
      * status calls the Graphite Metrics HTTP API to determine if Graphite is reachable.
+     * We use this to validate the configuration and if the API is reachable.
      *
      * @return array
      */
@@ -62,6 +64,83 @@ class Graphite
     }
 
     /**
+     * findMetrics calls the Graphite find/metrics HTTP API and returns the names of the metrics.
+     *
+     * @param string $hostName host name for the performance data query
+     * @param string $serviceName service name for the performance data query
+     * @param string $checkCommand checkcommand name for the performance data query
+     * @param string $from specifies the beginning for which to fetch the data
+     * @param array $includeMetrics metrics to include
+     * @param array $excludeMetrics metrics to exlude
+     *
+     * @throws ConnectException
+     * @throws RequestException
+     *
+     * @return array $metrics list of metrics
+     */
+    public function findMetrics(
+        string $hostName,
+        string $serviceName,
+        string $checkCommand,
+        string $from,
+        array $includeMetrics,
+        array $excludeMetrics
+    ) {
+        $metricNames = '*';
+
+        // Build the query string based on the service we are given
+        $target = sprintf('icinga2.%s.services.%s.%s.perfdata.%s', $hostName, $serviceName, $checkCommand, $metricNames);
+
+        if ($serviceName === 'hostalive') {
+            $target = sprintf('icinga2.%s.host.hostalive.perfdata.%s', $hostName, $metricNames);
+        }
+
+        $query = [
+            'query' => [
+                'query' => $target,
+                'from' => $from,
+                'format' => 'treejson',
+            ]
+        ];
+
+        $response = $this->client->request('GET', $this::FIND_ENDPOINT, $query);
+
+        $metrics = [];
+        $foundMetrics = json_decode($response->getBody(), true);
+
+        // We just care about the name of the metric
+        foreach ($foundMetrics as $metric) {
+            if ($metric['text'] ?? false) {
+                $metrics[] = $metric['text'];
+            }
+        }
+
+        // Then reduce it to only include the ones that are requested via the custom variable
+        if (!empty($includeMetrics)) {
+            // Resolve all wildcards in the list and leave only the matching metrics.
+            $metricsIncluded = array_filter($metrics, function ($metric) use ($includeMetrics) {
+                foreach ($includeMetrics as $pattern) {
+                    if (fnmatch($pattern, $metric)) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            $metrics = $metricsIncluded;
+        }
+
+        // Finally remove all that are explicitly to be removed
+        if (!empty($excludeMetrics)) {
+            $metricsExcluded = array_diff($metrics, $excludeMetrics);
+
+            $metrics = $metricsExcluded;
+        }
+
+        return $metrics;
+    }
+
+    /**
      * render calls the Graphite Render HTTP API, decodes and returns the response.
      *
      * @param string $hostName host name for the performance data query
@@ -69,10 +148,19 @@ class Graphite
      * @param string $checkCommand checkcommand name for the performance data query
      * @param string $from specifies the beginning for which to fetch the data
      * @param array $metrics list of metrics to return
+     *
+     * @throws ConnectException
+     * @throws RequestException
+     *
      * @return Response
      */
-    public function render(string $hostName, string $serviceName, string $checkCommand, string $from, array $metrics): Response
-    {
+    public function render(
+        string $hostName,
+        string $serviceName,
+        string $checkCommand,
+        string $from,
+        array $metrics
+    ): Response {
         // Sanitize query parameters for Graphite
         $hostName = self::sanitizePath($hostName);
         $serviceName = self::sanitizePath($serviceName);
@@ -99,11 +187,7 @@ class Graphite
             ]
         ];
 
-        try {
-            $response = $this->client->request('GET', $this::RENDER_ENDPOINT, $query);
-        } catch (RequestException $e) {
-            return $e->getResponse();
-        }
+        $response = $this->client->request('GET', $this::RENDER_ENDPOINT, $query);
 
         return $response;
     }
