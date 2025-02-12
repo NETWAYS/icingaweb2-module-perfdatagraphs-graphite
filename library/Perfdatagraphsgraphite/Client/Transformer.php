@@ -8,9 +8,6 @@ use Icinga\Module\Perfdatagraphs\Model\PerfdataSeries;
 
 use Icinga\Application\Logger;
 
-use Generator;
-use SplFixedArray;
-
 use GuzzleHttp\Psr7\Response;
 
 /**
@@ -41,124 +38,15 @@ class Transformer
     }
 
     /**
-     * getSeries returns a single Graphite dataseries as a list of datapoints.
-     * Used to find 'warn' and 'crit', but we can probably reuse this for 'value'.
-     *
-     * @param array $data
-     * @param string $target
-     * @return SplFixedArray
-     */
-    protected static function getSeries(array $data, string $target): SplFixedArray
-    {
-        $series = array_filter($data, function ($item) use ($target) {
-            if ($item['target'] === $target) {
-                return $item;
-            }
-        });
-
-        if (empty($series)) {
-            return SplFixedArray::fromArray([]);
-        }
-
-        $datapoints = $series[array_key_first($series)]['datapoints'];
-
-        $datapointGenerator = function ($datapoints) {
-            $idx = 0;
-            foreach ($datapoints as list($value)) {
-                yield [$idx, $value];
-                $idx++;
-            }
-        };
-
-        $values = new SplFixedArray(count($datapoints));
-
-        foreach ($datapointGenerator($datapoints) as $point) {
-            $values[$point[0]] = $point[1];
-        }
-
-        return $values;
-    }
-
-    /**
-     * getDataset transforms each dataset into the required format and yields the finalized dataset.
-     *
-     * @param array $data the data to transform
-     * @param string $checkCommand name of the checkcommand, could be useful
-     * @return Generator
-     */
-    protected static function getDataset(array $data, string $checkCommand = ''): Generator
-    {
-        $datapointGenerator = function ($datapoints) {
-            $idx = 0;
-            foreach ($datapoints as list($value, $timestamp)) {
-                yield [$idx, $value, $timestamp];
-                $idx++;
-            }
-        };
-
-        // A dataset is single perfdata target, e.g. rta, pl, disk /.
-        // A series is a list of datapoints with a label (value, warn, crit)
-        foreach ($data as $dataset) {
-            $name = $dataset['target'];
-
-            // Only .value is a dataset for us
-            // .crit and .warn get added to this dataset as a series
-            if (!str_ends_with($name, '.value')) {
-                continue;
-            }
-
-            $finalizedDataset = new PerfdataSet(self::updateTitle($name, $checkCommand));
-
-            // Create the values and timestamp arrays for this dataset
-            // Decided to use an SplFixedArray since there might be lots of data
-            $values = new SplFixedArray(count($dataset['datapoints']));
-            $timestamps = new SplFixedArray(count($dataset['datapoints']));
-
-            foreach ($datapointGenerator($dataset['datapoints']) as $point) {
-                $values[$point[0]] = $point[1];
-                $timestamps[$point[0]] = $point[2];
-            }
-
-            $valuesSeries = new PerfdataSeries('value', $values);
-
-            // If there is no data we can skip this dataseries
-            if ($valuesSeries->isEmpty()) {
-                continue;
-            }
-
-            $finalizedDataset->setTimestamps($timestamps);
-            $finalizedDataset->addSeries($valuesSeries);
-
-            // Get the warn and crit for this dataset and add it
-            // Since for graphite it's a unrelated dateset, we gotta find them first.
-            // I don't like this... maybe there's better way.
-            $warnName = preg_replace('/\.value$/', '.warn', $dataset['target']);
-            $warnSeries = self::getSeries($data, $warnName);
-            if (count($warnSeries) > 0) {
-                $warnSeries = new PerfdataSeries('warning', $warnSeries);
-                $finalizedDataset->addSeries($warnSeries);
-            }
-
-            $critName = preg_replace('/\.value$/', '.crit', $dataset['target']);
-            $critSeries = self::getSeries($data, $critName);
-            if (count($critSeries) > 0) {
-                $critSeries = new PerfdataSeries('critical', $critSeries);
-                $finalizedDataset->addSeries($critSeries);
-            }
-
-            yield $finalizedDataset;
-        }
-    }
-
-    /**
      * transform takes the Graphite API response and transforms it into the
      * output format we need.
      *
      * @param GuzzleHttp\Psr7\Response $response the data to transform
+     * @param array $metrics list of metrics
      * @param string $checkCommand name of the checkcommand
      * @return PerfdataResponse
      */
-    public static function transform(Response $response, string $checkCommand = ''): PerfdataResponse
+    public static function transform(Response $response, array $metrics, string $checkCommand = ''): PerfdataResponse
     {
         $pfr = new PerfdataResponse();
 
@@ -167,13 +55,77 @@ class Transformer
             return $pfr;
         }
 
-        // Parse the JSON response
-        // TODO: Might be best to stream the data, instead if one big GULP
-        // Did some tests with a CSV stream but it was slower than this.
-        $data = json_decode($response->getBody(), true);
+        $stream = new GraphiteCsvParser($response->getBody());
 
-        foreach (self::getDataset($data, $checkCommand) as $dataset) {
-            $pfr->addDataset($dataset);
+        // Create PerfdataSeries and add to PerfdataSet
+        $valueseries = [];
+        $warnseries = [];
+        $critseries = [];
+        $timestamps = [];
+
+        foreach ($stream->each() as $record) {
+            // Create a new array to store the values
+            if ($record->getSeriesName() === 'value' && !isset($valueseries[$record->getMetricName()])) {
+                $valueseries[$record->getMetricName()] = [];
+            }
+
+            if ($record->getSeriesName() === 'warn' && !isset($warnseries[$record->getMetricName()])) {
+                $warnseries[$record->getMetricName()] = [];
+            }
+
+            if ($record->getSeriesName() === 'crit' && !isset($critseries[$record->getMetricName()])) {
+                $critseries[$record->getMetricName()] = [];
+            }
+
+            if ($record->getSeriesName() === 'value') {
+                $valueseries[$record->getMetricName()][] = $record->getValue();
+            }
+
+            if ($record->getSeriesName() === 'warn') {
+                $warnseries[$record->getMetricName()][] = $record->getValue();
+            }
+
+            if ($record->getSeriesName() === 'crit') {
+                $critseries[$record->getMetricName()][] = $record->getValue();
+            }
+
+            if (!isset($timestamps[$record->getMetricName()])) {
+                $timestamps[$record->getMetricName()] = [];
+            }
+
+            // We only need to do this once
+            if ($record->getSeriesName() === 'value') {
+                $timestamps[$record->getMetricName()][] = $record->getTimestamp();
+            }
+        }
+
+        // For each metrics create PerfdataSet
+        // TODO: Skip if there are no values in the values Serie (all null)?
+        foreach ($metrics as $metric) {
+            // Do we have something for this metric
+            if (!array_key_exists($metric, $timestamps)) {
+                continue;
+            }
+
+            $s = new PerfdataSet(self::updateTitle($metric, $checkCommand));
+
+            $s->setTimestamps($timestamps[$metric]);
+
+            if (array_key_exists($metric, $valueseries)) {
+                $series = new PerfdataSeries('value', $valueseries[$metric]);
+                $s->addSeries($series);
+            }
+
+            if (array_key_exists($metric, $warnseries)) {
+                $series = new PerfdataSeries('warning', $warnseries[$metric]);
+                $s->addSeries($series);
+            }
+            if (array_key_exists($metric, $critseries)) {
+                $series = new PerfdataSeries('critical', $critseries[$metric]);
+                $s->addSeries($series);
+            }
+
+            $pfr->addDataset($s);
         }
 
         return $pfr;

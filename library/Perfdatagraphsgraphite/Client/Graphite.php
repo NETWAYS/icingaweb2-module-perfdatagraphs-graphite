@@ -171,10 +171,11 @@ class Graphite
         $target = $this->parseTemplate($hostName, $serviceName, $checkCommand, $isHostCheck, $metricNames) . '.{value,warn,crit}';
 
         $query = [
+            'stream'=> true,
             'query' => [
                 'target' => $target,
                 'from' => $from,
-                'format' => 'json',
+                'format' => 'csv',
             ]
         ];
 

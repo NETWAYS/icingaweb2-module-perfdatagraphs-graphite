@@ -76,7 +76,7 @@ class PerfdataSource extends PerfdataSourceHook
         }
 
         // Transform into the PerfdataSourceHook format
-        $perfdataresponse = Transformer::transform($response, $req->getCheckcommand());
+        $perfdataresponse = Transformer::transform($response, $metrics, $req->getCheckcommand());
 
         return $perfdataresponse;
     }
