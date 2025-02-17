@@ -121,6 +121,11 @@ class Transformer
 
             $valuesSeries = new PerfdataSeries('value', $values);
 
+            // If there is no data we can skip this dataseries
+            if ($valuesSeries->isEmpty()) {
+                continue;
+            }
+
             $finalizedDataset->setTimestamps($timestamps);
             $finalizedDataset->addSeries($valuesSeries);
 
