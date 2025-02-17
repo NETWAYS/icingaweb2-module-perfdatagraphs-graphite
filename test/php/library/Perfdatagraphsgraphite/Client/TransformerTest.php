@@ -55,6 +55,16 @@ final class TransformerTest extends TestCase
         $this->assertEquals($expected, json_encode($actual));
     }
 
+    public function test_transform_with_emtpy()
+    {
+        $input = $this->loadTestdata('test/testdata/hostalive_empty.json');
+
+        $actual = Transformer::transform($input);
+        $expected = '{"errors":[],"data":[{"title":"rta","unit":"","timestamps":[1731848460,1731848520,1731848580,1731848640,1731848700],"series":[{"name":"value","values":[7,5,8,7,null]},{"name":"warning","values":[3,3,3,3,null]},{"name":"critical","values":[5,5,5,5,null]}]}]}';
+
+        $this->assertEquals($expected, json_encode($actual));
+    }
+
     public function test_transform_with_warn_and_crit()
     {
         $input = $this->loadTestdata('test/testdata/hostalive.json');
