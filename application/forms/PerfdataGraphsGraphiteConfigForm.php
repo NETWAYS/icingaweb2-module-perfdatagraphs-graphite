@@ -46,6 +46,30 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
             'description' => t('Skip the TLS verification'),
             'label' => 'Skip the TLS verification'
         ]);
+
+        $this->addElement(
+            'text',
+            'graphite_writer_host_name_template',
+            [
+                'label' => $this->translate('Host name template'),
+                'description' => $this->translate(
+                    'The value of your Icinga 2 GraphiteWriter\'s'
+                        . ' attribute host_name_template (if specified)'
+                ),
+            ]
+        );
+
+        $this->addElement(
+            'text',
+            'graphite_writer_service_name_template',
+            [
+                'label' => $this->translate('Service name template'),
+                'description' => $this->translate(
+                    'The value of your Icinga 2 GraphiteWriter\'s'
+                        . ' attribute service_name_template (if specified)'
+                ),
+            ]
+        );
     }
 
     public function addSubmitButton()

@@ -26,14 +26,27 @@ class Graphite
     /** @var $this \Icinga\Application\Modules\Module */
     protected $client = null;
 
-    public function __construct(string $baseURI, string $username, string $password, int $timeout, bool $tlsVerify)
-    {
+    protected string $hostNameTemplate;
+    protected string $serviceNameTemplate;
+
+    public function __construct(
+        string $baseURI,
+        string $username,
+        string $password,
+        int $timeout,
+        bool $tlsVerify,
+        string $hostNameTemplate,
+        string $serviceNameTemplate
+    ) {
         $this->client = new Client([
             'base_uri' => $baseURI,
             'timeout' => $timeout,
             'auth' => [$username, $password],
             'verify' => $tlsVerify
         ]);
+
+        $this->hostNameTemplate = $hostNameTemplate;
+        $this->serviceNameTemplate = $serviceNameTemplate;
     }
 
     /**
@@ -70,6 +83,7 @@ class Graphite
      * @param string $serviceName service name for the performance data query
      * @param string $checkCommand checkcommand name for the performance data query
      * @param string $from specifies the beginning for which to fetch the data
+     * @param bool $isHostCheck is this a host check or not
      * @param array $includeMetrics metrics to include
      * @param array $excludeMetrics metrics to exlude
      *
@@ -83,17 +97,13 @@ class Graphite
         string $serviceName,
         string $checkCommand,
         string $from,
+        bool $isHostCheck,
         array $includeMetrics,
         array $excludeMetrics
-    ) {
+    ): array {
         $metricNames = '*';
 
-        // Build the query string based on the service we are given
-        $target = sprintf('icinga2.%s.services.%s.%s.perfdata.%s', $hostName, $serviceName, $checkCommand, $metricNames);
-
-        if ($serviceName === 'hostalive') {
-            $target = sprintf('icinga2.%s.host.hostalive.perfdata.%s', $hostName, $metricNames);
-        }
+        $target = $this->parseTemplate($hostName, $serviceName, $checkCommand, $isHostCheck, $metricNames);
 
         $query = [
             'query' => [
@@ -147,6 +157,7 @@ class Graphite
      * @param string $serviceName service name for the performance data query
      * @param string $checkCommand checkcommand name for the performance data query
      * @param string $from specifies the beginning for which to fetch the data
+     * @param bool $isHostCheck is this a host check or not
      * @param array $metrics list of metrics to return
      *
      * @throws ConnectException
@@ -159,6 +170,7 @@ class Graphite
         string $serviceName,
         string $checkCommand,
         string $from,
+        bool $isHostCheck,
         array $metrics
     ): Response {
         // Sanitize query parameters for Graphite
@@ -172,12 +184,7 @@ class Graphite
             $metricNames = '{'. implode(',', $m) . '}';
         }
 
-        // Build the query string based on the service we are given
-        $target = sprintf('icinga2.%s.services.%s.%s.perfdata.%s.{value,warn,crit}', $hostName, $serviceName, $checkCommand, $metricNames);
-
-        if ($serviceName === 'hostalive') {
-            $target = sprintf('icinga2.%s.host.hostalive.perfdata.%s.{value,warn,crit}', $hostName, $metricNames);
-        }
+        $target = $this->parseTemplate($hostName, $serviceName, $checkCommand, $isHostCheck, $metricNames) . '.{value,warn,crit}';
 
         $query = [
             'query' => [
@@ -216,12 +223,43 @@ class Graphite
     }
 
     /**
+     * parseTemplate prepares the Graphite writer template for the API call.
+     *
+     * @param string $hostName host name for the performance data query
+     * @param string $serviceName service name for the performance data query
+     * @param string $checkCommand checkcommand name for the performance data query
+     * @param bool $isHostCheck is this a host check or not
+     * @param array $metrics list of metrics to return
+     *
+     * @return string
+     */
+    public function parseTemplate(string $hostName, string $serviceName, string $checkCommand, bool $isHostCheck, string $metricNames): string
+    {
+        // Build the query string based on the service we are given
+        $template = str_replace(
+            ['$host.name$', '$service.name$', '$service.check_command$'],
+            [$hostName, $serviceName, $checkCommand],
+            $this->serviceNameTemplate
+        );
+
+        if ($isHostCheck) {
+            $template = str_replace(
+                ['$host.name$', '$host.check_command$'],
+                [$hostName, $checkCommand],
+                $this->hostNameTemplate
+            );
+        }
+
+        return $template . sprintf('.perfdata.%s', $metricNames);
+    }
+
+    /**
      * fromConfig returns a new Graphite Client from this module's configuration
      *
      * @param Config $moduleConfig configuration to load (used for testing)
      * @return $this
      */
-    public static function fromConfig(Config $moduleConfig = null)
+    public static function fromConfig(Config $moduleConfig = null): Graphite
     {
         $default = [
             'api_url' => 'http://localhost:8081',
@@ -229,6 +267,8 @@ class Graphite
             'api_username' => '',
             'api_password' => '',
             'api_tls_insecure' => false,
+            'writer_host_name_template' => 'icinga2.$host.name$.host.$host.check_command$',
+            'writer_service_name_template' => 'icinga2.$host.name$.services.$service.name$.$service.check_command$',
         ];
 
         // Try to load the configuration
@@ -246,8 +286,10 @@ class Graphite
         $username = $moduleConfig->get('graphite', 'api_username', $default['api_username']);
         $password = $moduleConfig->get('graphite', 'api_password', $default['api_password']);
         $tlsVerify = (bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']);
+        $hostNameTemplate = $moduleConfig->get('graphite', 'writer_host_name_template', $default['writer_host_name_template']);
+        $serviceNameTemplate = $moduleConfig->get('graphite', 'writer_service_name_template', $default['writer_service_name_template']);
 
-        return new static($baseURI, $username, $password, $timeout, $tlsVerify);
+        return new static($baseURI, $username, $password, $timeout, $tlsVerify, $hostNameTemplate, $serviceNameTemplate);
     }
 
     /**

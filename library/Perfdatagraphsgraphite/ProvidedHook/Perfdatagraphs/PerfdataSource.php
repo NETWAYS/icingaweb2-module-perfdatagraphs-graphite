@@ -46,6 +46,7 @@ class PerfdataSource extends PerfdataSourceHook
                 $req->getServicename(),
                 $req->getCheckcommand(),
                 $from,
+                $req->isHostCheck(),
                 $req->getIncludeMetrics(),
                 $req->getExcludeMetrics()
             );
@@ -56,6 +57,7 @@ class PerfdataSource extends PerfdataSourceHook
                 $req->getServicename(),
                 $req->getCheckcommand(),
                 $from,
+                $req->isHostCheck(),
                 $metrics
             );
         } catch (ConnectException $e) {
