@@ -173,11 +173,6 @@ class Graphite
         bool $isHostCheck,
         array $metrics
     ): Response {
-        // Sanitize query parameters for Graphite
-        $hostName = self::sanitizePath($hostName);
-        $serviceName = self::sanitizePath($serviceName);
-        $checkCommand = self::sanitizePath($checkCommand);
-
         $metricNames = '*';
         if (!empty($metrics)) {
             $m = array_map([$this, 'sanitizePath'], $metrics);
@@ -235,6 +230,11 @@ class Graphite
      */
     public function parseTemplate(string $hostName, string $serviceName, string $checkCommand, bool $isHostCheck, string $metricNames): string
     {
+        // Sanitize query parameters for Graphite
+        $hostName = self::sanitizePath($hostName);
+        $serviceName = self::sanitizePath($serviceName);
+        $checkCommand = self::sanitizePath($checkCommand);
+
         // Build the query string based on the service we are given
         $template = str_replace(
             ['$host.name$', '$service.name$', '$service.check_command$'],
