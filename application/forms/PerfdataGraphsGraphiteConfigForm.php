@@ -28,13 +28,14 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         ]);
 
         $this->addElement('text', 'graphite_api_username', [
-            'description' => t('Graphite-API Username'),
-            'label' => 'Graphite-API User'
+            'description' => t('Graphite-API Username for HTTP Basic Auth'),
+            'label' => 'Graphite-API Basic Auth User'
         ]);
 
         $this->addElement('password', 'graphite_api_password', [
-            'description' => t('Graphite-API Password'),
-            'label' => 'Graphite-API Password'
+            'description' => t('Graphite-API Password for HTTP Basic Auth'),
+            'label' => 'Graphite-API Basic Auth Password',
+            'renderPassword' => true
         ]);
 
         $this->addElement('number', 'graphite_api_timeout', [
@@ -156,9 +157,11 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         $username = $form->getValue('graphite_api_username', '');
         $password = $form->getValue('graphite_api_password', '');
         $tlsVerify = (bool) $form->getValue('graphite_api_tls_insecure', false);
+        $hostTemplate = $form->getValue('graphite_writer_host_name_template', '');
+        $serviceTemplate = $form->getValue('graphite_writer_service_name_template', '');
 
         try {
-            $c = new Graphite($baseURI, $username, $password, $timeout, $tlsVerify);
+            $c = new Graphite($baseURI, $username, $password, $timeout, $tlsVerify, $hostTemplate, $serviceTemplate);
         } catch (Exception $e) {
             return ['output' => 'General error: ' . $e->getMessage(), 'error' => true];
         }

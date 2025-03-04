@@ -33,8 +33,21 @@ class ConfigController extends CompatController
      */
     public function generalAction(): void
     {
+        $config = Config::module('perfdatagraphsgraphite');
+
+        $c = [
+            'graphite_api_url' => $config->get('graphite', 'api_url', 'http://localhost:8081'),
+            'graphite_api_timeout' => (int) $config->get('graphite', 'api_timeout', 10),
+            'graphite_api_user' => $config->get('graphite', 'api_user'),
+            'graphite_api_password' => $config->get('graphite', 'api_token'),
+            'graphite_api_tls_insecure' => (bool) $config->get('graphite', 'api_tls_insecure', false),
+            'graphite_writer_host_name_template' => $config->get('graphite', 'writer_host_name_template', 'icinga2.$host.name$.host.$host.check_command$'),
+            'graphite_writer_service_name_template' => $config->get('graphite', 'writer_service_name_template', 'icinga2.$host.name$.services.$service.name$.$service.check_command$'),
+        ];
+
         $form = (new PerfdataGraphsGraphiteConfigForm())
-            ->setIniConfig(Config::module('perfdatagraphsgraphite'));
+            ->populate($c)
+            ->setIniConfig($config);
         $form->handleRequest();
         $this->addContent(new HtmlString($form->render()));
     }
