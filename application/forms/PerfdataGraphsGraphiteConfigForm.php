@@ -32,7 +32,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
             'label' => 'Graphite-API User'
         ]);
 
-        $this->addElement('text', 'graphite_api_password', [
+        $this->addElement('password', 'graphite_api_password', [
             'description' => t('Graphite-API Password'),
             'label' => 'Graphite-API Password'
         ]);
