@@ -24,7 +24,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
     {
         $this->addElement('text', 'graphite_api_url', [
             'label' => t('API URL'),
-            'description' => t('The URL or Graphite including the scheme'),
+            'description' => t('The URL for Graphite including the scheme'),
             'required' => true
         ]);
 
