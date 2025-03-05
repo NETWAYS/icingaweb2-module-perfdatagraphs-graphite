@@ -23,37 +23,39 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
     public function createElements(array $formData)
     {
         $this->addElement('text', 'graphite_api_url', [
-            'description' => t('Graphite-API URL'),
-            'label' => 'Graphite-API URL'
+            'label' => t('API URL'),
+            'description' => t('The URL or Graphite including the scheme'),
+            'required' => true
         ]);
 
         $this->addElement('text', 'graphite_api_username', [
-            'description' => t('Graphite-API Username for HTTP Basic Auth'),
-            'label' => 'Graphite-API Basic Auth User'
+            'label' => t('API basic auth username'),
+            'description' => t('The user for HTTP basic auth. Not used if empty')
         ]);
 
         $this->addElement('password', 'graphite_api_password', [
-            'description' => t('Graphite-API Password for HTTP Basic Auth'),
-            'label' => 'Graphite-API Basic Auth Password',
+            'label' => t('API HTTP basic auth password'),
+            'description' => t('The password for HTTP basic auth. Not used if empty'),
             'renderPassword' => true
         ]);
 
         $this->addElement('number', 'graphite_api_timeout', [
-            'description' => t('Graphite-API timeout in seconds'),
-            'label' => 'Graphite-API timeout in seconds'
+            'label' => t('API timeout in seconds'),
+            'description' => t('The HTTP timeout in seconds. Should be higher than 0'),
+            'required' => true
         ]);
 
         $this->addElement('checkbox', 'graphite_api_tls_insecure', [
             'description' => t('Skip the TLS verification'),
-            'label' => 'Skip the TLS verification'
+            'label' => t('Skip the TLS verification')
         ]);
 
         $this->addElement(
             'text',
             'graphite_writer_host_name_template',
             [
-                'label' => $this->translate('Host name template'),
-                'description' => $this->translate(
+                'label' => t('Host name template'),
+                'description' => t(
                     'The value of your Icinga 2 GraphiteWriter\'s'
                         . ' attribute host_name_template (if specified)'
                 ),
@@ -64,8 +66,8 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
             'text',
             'graphite_writer_service_name_template',
             [
-                'label' => $this->translate('Service name template'),
-                'description' => $this->translate(
+                'label' => t('Service name template'),
+                'description' => t(
                     'The value of your Icinga 2 GraphiteWriter\'s'
                         . ' attribute service_name_template (if specified)'
                 ),
@@ -85,7 +87,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
             [
                 'ignore' => true,
                 'label' => $this->translate('Validate Configuration'),
-                'data-progress-label' => $this->translate('Validation In Progress'),
+                'data-progress-label' => $this->translate('Validation in Progress'),
                 'decorators' => ['ViewHelper']
             ]
         );
