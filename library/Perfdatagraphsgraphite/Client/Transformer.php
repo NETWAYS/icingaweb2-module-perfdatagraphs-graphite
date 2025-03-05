@@ -65,37 +65,37 @@ class Transformer
 
         foreach ($stream->each() as $record) {
             // Create a new array to store the values
-            if ($record->getSeriesName() === 'value' && !isset($valueseries[$record->getMetricName()])) {
-                $valueseries[$record->getMetricName()] = [];
+            if ($record->seriesname === 'value' && !isset($valueseries[$record->metricname])) {
+                $valueseries[$record->metricname] = [];
             }
 
-            if ($record->getSeriesName() === 'warn' && !isset($warnseries[$record->getMetricName()])) {
-                $warnseries[$record->getMetricName()] = [];
+            if ($record->seriesname === 'warn' && !isset($warnseries[$record->metricname])) {
+                $warnseries[$record->metricname] = [];
             }
 
-            if ($record->getSeriesName() === 'crit' && !isset($critseries[$record->getMetricName()])) {
-                $critseries[$record->getMetricName()] = [];
+            if ($record->seriesname === 'crit' && !isset($critseries[$record->metricname])) {
+                $critseries[$record->metricname] = [];
             }
 
-            if ($record->getSeriesName() === 'value') {
-                $valueseries[$record->getMetricName()][] = $record->getValue();
+            if ($record->seriesname === 'value') {
+                $valueseries[$record->metricname][] = $record->value;
             }
 
-            if ($record->getSeriesName() === 'warn') {
-                $warnseries[$record->getMetricName()][] = $record->getValue();
+            if ($record->seriesname === 'warn') {
+                $warnseries[$record->metricname][] = $record->value;
             }
 
-            if ($record->getSeriesName() === 'crit') {
-                $critseries[$record->getMetricName()][] = $record->getValue();
+            if ($record->seriesname === 'crit') {
+                $critseries[$record->metricname][] = $record->value;
             }
 
-            if (!isset($timestamps[$record->getMetricName()])) {
-                $timestamps[$record->getMetricName()] = [];
+            if (!isset($timestamps[$record->metricname])) {
+                $timestamps[$record->metricname] = [];
             }
 
             // We only need to do this once
-            if ($record->getSeriesName() === 'value') {
-                $timestamps[$record->getMetricName()][] = $record->getTimestamp();
+            if ($record->seriesname === 'value') {
+                $timestamps[$record->metricname][] = $record->timestamp;
             }
         }
 
