@@ -6,6 +6,8 @@ use Icinga\Module\Perfdatagraphs\Model\PerfdataResponse;
 use Icinga\Module\Perfdatagraphs\Model\PerfdataSet;
 use Icinga\Module\Perfdatagraphs\Model\PerfdataSeries;
 
+use Icinga\Application\Logger;
+
 use Generator;
 use SplFixedArray;
 
@@ -163,6 +165,7 @@ class Transformer
         $pfr = new PerfdataResponse();
 
         if (empty($response)) {
+            Logger::warning('Did not receive data in response');
             return $pfr;
         }
 

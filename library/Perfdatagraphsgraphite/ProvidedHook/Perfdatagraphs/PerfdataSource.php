@@ -9,6 +9,8 @@ use Icinga\Module\Perfdatagraphs\Hook\PerfdataSourceHook;
 use Icinga\Module\Perfdatagraphs\Model\PerfdataRequest;
 use Icinga\Module\Perfdatagraphs\Model\PerfdataResponse;
 
+use Icinga\Application\Logger;
+
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ConnectException;
 

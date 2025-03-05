@@ -113,6 +113,8 @@ class Graphite
             ]
         ];
 
+        Logger::debug('Calling findMetric API with query: %s', $query);
+
         $response = $this->client->request('GET', $this::FIND_ENDPOINT, $query);
 
         $metrics = [];
@@ -146,6 +148,8 @@ class Graphite
 
             $metrics = $metricsExcluded;
         }
+
+        Logger::debug('Found and included/excluded metrics: %s', $metrics);
 
         return $metrics;
     }
@@ -188,6 +192,8 @@ class Graphite
                 'format' => 'json',
             ]
         ];
+
+        Logger::debug('Calling render API with query: %s', $query);
 
         $response = $this->client->request('GET', $this::RENDER_ENDPOINT, $query);
 
@@ -274,6 +280,7 @@ class Graphite
         // Try to load the configuration
         if ($moduleConfig === null) {
             try {
+                Logger::debug('Loaded Perfdata Graphs Graphite module configuration to get Config');
                 $moduleConfig = Config::module('perfdatagraphsgraphite');
             } catch (Exception $e) {
                 Logger::error('Failed to load Perfdata Graphs Graphite module configuration: %s', $e);
