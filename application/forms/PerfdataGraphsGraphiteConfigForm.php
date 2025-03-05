@@ -40,8 +40,8 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         ]);
 
         $this->addElement('number', 'graphite_api_timeout', [
-            'label' => t('API timeout in seconds'),
-            'description' => t('The HTTP timeout in seconds. Should be higher than 0'),
+            'label' => t('HTTP timeout in seconds'),
+            'description' => t('HTTP timeout for the API in seconds. Should be higher than 0'),
             'required' => true
         ]);
 
