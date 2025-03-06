@@ -149,6 +149,11 @@ class Graphite
             $metrics = $metricsExcluded;
         }
 
+        // TODO: This a bit hacky and obscure, but since we load everything at once
+        // that can cause the memory to be exhausted. We should either
+        // optimize this module, or the perfdata design in general.
+        $metrics = array_slice($metrics, 0, 10);
+
         Logger::debug('Found and included/excluded metrics: %s', $metrics);
 
         return $metrics;
