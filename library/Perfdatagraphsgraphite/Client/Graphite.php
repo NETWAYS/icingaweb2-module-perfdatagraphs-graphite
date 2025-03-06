@@ -315,11 +315,11 @@ class Graphite
             return '';
         }
 
-        // TODO: extend this list to include all cases
         $replace = [
             '/\s+/' => '_',
             '/\//' => '_',
             '/\./' => '_',
+            '/,/' => '\,',
         ];
 
         return preg_replace(

@@ -33,7 +33,6 @@ class Transformer
         $t = preg_replace('/\.value$/', '', preg_replace('/.+perfdata\./', '', $title));
 
         // Replace characters to make it make sense in the frontend
-        // TODO there's probably more to do here
         if ($checkCommand === 'disk') {
             $t = str_replace('_', '/', $t);
         }
@@ -45,8 +44,8 @@ class Transformer
      * getSeries returns a single Graphite dataseries as a list of datapoints.
      * Used to find 'warn' and 'crit', but we can probably reuse this for 'value'.
      *
-     * @param array
-     * @param string
+     * @param array $data
+     * @param string $target
      * @return SplFixedArray
      */
     protected static function getSeries(array $data, string $target): SplFixedArray
@@ -89,7 +88,6 @@ class Transformer
      */
     protected static function getDataset(array $data, string $checkCommand = ''): Generator
     {
-        // TODO There's some duplication here, but that's fine for now.
         $datapointGenerator = function ($datapoints) {
             $idx = 0;
             foreach ($datapoints as list($value, $timestamp)) {
@@ -171,6 +169,7 @@ class Transformer
 
         // Parse the JSON response
         // TODO: Might be best to stream the data, instead if one big GULP
+        // Did some tests with a CSV stream but it was slower than this.
         $data = json_decode($response->getBody(), true);
 
         foreach (self::getDataset($data, $checkCommand) as $dataset) {
