@@ -47,8 +47,8 @@ final class GraphiteTest extends TestCase
         $this->assertEquals($expected, $actual);
     }
 
-   public function test_sanitizepath()
-   {
+    public function test_sanitizepath()
+    {
         $actual = Graphite::sanitizePath('hostname.internal.fqdn');
         $expected = 'hostname_internal_fqdn';
         $this->assertEquals($expected, $actual);
@@ -60,5 +60,47 @@ final class GraphiteTest extends TestCase
         $actual = Graphite::sanitizePath('/usr/share/local/foo');
         $expected = '_usr_share_local_foo';
         $this->assertEquals($expected, $actual);
-   }
+    }
+
+    public function test_filterMetrics()
+    {
+        $c = new Graphite('base', 'user', 'passed', 10, false, '', '');
+
+        $actual = $c->filterMetrics(
+            ['foo', 'bar', 'foobar', 'barfoo', 'uptime', 'excludeme'],
+            ['uptime', 'foo*'],
+            ['bar*', 'excludeme']
+        );
+
+        $expected = [0 => 'foo', 2 => 'foobar', 4 => 'uptime'];
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_filterMetrics_withExcludeOnly()
+    {
+        $c = new Graphite('base', 'user', 'passed', 10, false, '', '');
+
+        $actual = $c->filterMetrics(
+            ['exclude', 'include', 'excludealso', 'removeme'],
+            [],
+            ['exclude*', 'removeme']
+        );
+
+        $expected = [1 => 'include'];
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function test_filterMetrics_withIncludeOnly()
+    {
+        $c = new Graphite('base', 'user', 'passed', 10, false, '', '');
+
+        $actual = $c->filterMetrics(
+            ['exclude', 'include', 'excludealso', 'includeme', 'hi'],
+            ['include*', 'hi'],
+            []
+        );
+
+        $expected = [1 => 'include', 3 => 'includeme', 4 => 'hi'];
+        $this->assertEquals($expected, $actual);
+    }
 }
