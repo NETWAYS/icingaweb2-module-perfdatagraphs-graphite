@@ -127,27 +127,7 @@ class Graphite
             }
         }
 
-        // Then reduce it to only include the ones that are requested via the custom variable
-        if (!empty($includeMetrics)) {
-            // Resolve all wildcards in the list and leave only the matching metrics.
-            $metricsIncluded = array_filter($metrics, function ($metric) use ($includeMetrics) {
-                foreach ($includeMetrics as $pattern) {
-                    if (fnmatch($pattern, $metric)) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            $metrics = $metricsIncluded;
-        }
-
-        // Finally remove all that are explicitly to be removed
-        if (!empty($excludeMetrics)) {
-            $metricsExcluded = array_diff($metrics, $excludeMetrics);
-
-            $metrics = $metricsExcluded;
-        }
+        $metrics = $this->filterMetrics($metrics, $includeMetrics, $excludeMetrics);
 
         // TODO: This a bit hacky and obscure, but since we load everything at once
         // that can cause the memory to be exhausted. We should either
@@ -264,6 +244,39 @@ class Graphite
         return $template . sprintf('.perfdata.%s', $metricNames);
     }
 
+    public function filterMetrics(array $metrics, array $includeMetrics, array $excludeMetrics): array
+    {
+        // Then reduce it to only include the ones that are requested via the custom variable
+        if (!empty($includeMetrics)) {
+            // Resolve all wildcards in the list and leave only the matching metrics.
+            $metricsIncluded = array_filter($metrics, function ($metric) use ($includeMetrics) {
+                foreach ($includeMetrics as $pattern) {
+                    if (fnmatch($pattern, $metric)) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            $metrics = $metricsIncluded;
+        }
+
+        // Finally remove all that are explicitly to be removed
+        if (!empty($excludeMetrics)) {
+            $metricsExcluded = array_filter($metrics, function ($metric) use ($excludeMetrics) {
+                foreach ($excludeMetrics as $pattern) {
+                    if (fnmatch($pattern, $metric)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            $metrics = $metricsExcluded;
+        }
+
+        return $metrics;
+    }
     /**
      * fromConfig returns a new Graphite Client from this module's configuration
      *
