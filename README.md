@@ -4,7 +4,7 @@ A Graphite backend for the Icinga Web Performance Data Graphs Module.
 
 ## Known Issues
 
-### Loads loads only limited amount of metrics
+### Loads only limited amount of metrics
 
 Loading a lot of data can cause the PHP memory exhaustion. Thus
 the module currently only loads 10 metrics by default.
