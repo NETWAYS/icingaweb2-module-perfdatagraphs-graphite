@@ -205,7 +205,7 @@ class Graphite
         // Subtract the inverval from the current time so that we have
         // the 'from' parameter for graphite
         $now->sub($int);
-        return $now->format('H:i_Ymd');
+        return $now->getTimestamp();
     }
 
     /**
