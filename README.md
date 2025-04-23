@@ -8,7 +8,7 @@ A Graphite backend for the Icinga Web Performance Data Graphs Module.
 
 ### Loads only limited amount of metrics
 
-Loading a lot of data can cause the PHP memory exhaustion. Thus
+Loading a lot of data can cause a PHP memory exhaustion error. Thus
 the module currently only loads 10 metrics by default.
 Use the custom variables `perfdatagraphs_config_metrics_include/exclude`
 to select the metrics you need.
