@@ -6,9 +6,11 @@ use Icinga\Application\Config;
 use Icinga\Application\Logger;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\StreamWrapper;
+use JsonMachine\Items;
 
 use DateInterval;
 use DateTime;
@@ -106,6 +108,7 @@ class Graphite
         $target = $this->parseTemplate($hostName, $serviceName, $checkCommand, $isHostCheck, $metricNames);
 
         $query = [
+            'stream'=> true,
             'query' => [
                 'query' => $target,
                 'from' => $from,
@@ -116,23 +119,17 @@ class Graphite
         Logger::debug('Calling findMetric API with query: %s', $query);
 
         $response = $this->client->request('GET', $this::FIND_ENDPOINT, $query);
+        $stream = StreamWrapper::getResource($response->getBody());
 
         $metrics = [];
-        $foundMetrics = json_decode($response->getBody(), true);
-
         // We just care about the name of the metric
-        foreach ($foundMetrics as $metric) {
-            if ($metric['text'] ?? false) {
-                $metrics[] = $metric['text'];
+        foreach (Items::fromStream($stream) as $value) {
+            if (property_exists($value, 'text')) {
+                    $metrics[] = $value->text;
             }
         }
 
         $metrics = $this->filterMetrics($metrics, $includeMetrics, $excludeMetrics);
-
-        // TODO: This a bit hacky and obscure, but since we load everything at once
-        // that can cause the memory to be exhausted. We should either
-        // optimize this module, or the perfdata design in general.
-        $metrics = array_slice($metrics, 0, 10);
 
         Logger::debug('Found and included/excluded metrics: %s', $metrics);
 
@@ -171,6 +168,7 @@ class Graphite
         $target = $this->parseTemplate($hostName, $serviceName, $checkCommand, $isHostCheck, $metricNames) . '.{value,warn,crit}';
 
         $query = [
+            'stream'=> true,
             'query' => [
                 'target' => $target,
                 'from' => $from,

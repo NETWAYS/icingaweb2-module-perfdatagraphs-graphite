@@ -12,6 +12,9 @@ use Generator;
 use SplFixedArray;
 
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\StreamWrapper;
+
+use JsonMachine\Items;
 
 /**
  * Transformer handles all data transformation.
@@ -168,9 +171,11 @@ class Transformer
         }
 
         // Parse the JSON response
-        // TODO: Might be best to stream the data, instead if one big GULP
-        // Did some tests with a CSV stream but it was slower than this.
-        $data = json_decode($response->getBody(), true);
+        $stream = StreamWrapper::getResource($response->getBody());
+        $data = [];
+        foreach (Items::fromStream($stream) as $key => $value) {
+            $data[] = (array)$value;
+        }
 
         foreach (self::getDataset($data, $checkCommand) as $dataset) {
             $pfr->addDataset($dataset);
