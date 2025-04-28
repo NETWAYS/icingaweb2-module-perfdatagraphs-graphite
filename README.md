@@ -4,6 +4,10 @@
 
 A Graphite backend for the Icinga Web Performance Data Graphs Module.
 
+This module requires the frontend module:
+
+- https://github.com/NETWAYS/icingaweb2-module-perfdatagraphs
+
 ## Known Issues
 
 ### Loads only limited amount of metrics
