@@ -25,7 +25,8 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         $this->addElement('text', 'graphite_api_url', [
             'label' => t('API URL'),
             'description' => t('The URL for Graphite including the scheme'),
-            'required' => true
+            'required' => true,
+            'placeholder' => 'http://localhost:8081',
         ]);
 
         $this->addElement('text', 'graphite_api_username', [
@@ -42,7 +43,8 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         $this->addElement('number', 'graphite_api_timeout', [
             'label' => t('HTTP timeout in seconds'),
             'description' => t('HTTP timeout for the API in seconds. Should be higher than 0'),
-            'required' => true
+            'required' => true,
+            'placeholder' => 10,
         ]);
 
         $this->addElement('checkbox', 'graphite_api_tls_insecure', [
@@ -59,6 +61,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
                     'The value of your Icinga 2 GraphiteWriter\'s'
                         . ' attribute host_name_template (if specified)'
                 ),
+                'placeholder' => 'icinga2.$host.name$.host.$host.check_command$',
             ]
         );
 
@@ -71,6 +74,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
                     'The value of your Icinga 2 GraphiteWriter\'s'
                         . ' attribute service_name_template (if specified)'
                 ),
+                'placeholder' => 'icinga2.$host.name$.services.$service.name$.$service.check_command$',
             ]
         );
     }
