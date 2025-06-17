@@ -57,8 +57,14 @@ class Graphite
      */
     public function status(): array
     {
+        $query = [
+            'query' => [
+                'query' => '*',
+            ]
+        ];
+
         try {
-            $response = $this->client->request('GET', $this::METRICS_ENDPOINT);
+            $response = $this->client->request('GET', $this::METRICS_ENDPOINT, $query);
             return ['output' =>  $response->getBody()->getContents()];
         } catch (ConnectException $e) {
             return ['output' => 'Connection error: ' . $e->getMessage(), 'error' => true];
