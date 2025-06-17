@@ -1,5 +1,5 @@
 Name: PerfdataGraphs Graphite Backend
-Version: 0.1.0
+Version: 0.1.2
 Requires:
   Modules: perfdatagraphs
 Description: Graphite Backend for Icinga Web Performance Data Graphs
