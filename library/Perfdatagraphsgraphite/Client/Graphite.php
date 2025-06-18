@@ -26,6 +26,7 @@ class Graphite
     /** @var $this \Icinga\Application\Modules\Module */
     protected $client = null;
 
+    protected string $URL;
     protected string $hostNameTemplate;
     protected string $serviceNameTemplate;
 
@@ -39,11 +40,12 @@ class Graphite
         string $serviceNameTemplate
     ) {
         $this->client = new Client([
-            'base_uri' => $baseURI,
             'timeout' => $timeout,
             'auth' => [$username, $password],
             'verify' => $tlsVerify
         ]);
+
+        $this->URL = rtrim($baseURI, '/');
 
         $this->hostNameTemplate = $hostNameTemplate;
         $this->serviceNameTemplate = $serviceNameTemplate;
@@ -63,8 +65,10 @@ class Graphite
             ]
         ];
 
+        $url = $this->URL . $this::METRICS_ENDPOINT;
+
         try {
-            $response = $this->client->request('GET', $this::METRICS_ENDPOINT, $query);
+            $response = $this->client->request('GET', $url, $query);
             return ['output' =>  $response->getBody()->getContents()];
         } catch (ConnectException $e) {
             return ['output' => 'Connection error: ' . $e->getMessage(), 'error' => true];
@@ -119,9 +123,11 @@ class Graphite
             ]
         ];
 
-        Logger::debug('Calling findMetric API with query: %s', $query);
+        $url = $this->URL . $this::FIND_ENDPOINT;
 
-        $response = $this->client->request('GET', $this::FIND_ENDPOINT, $query);
+        Logger::debug('Calling findMetric API at %s with query: %s', $url, $query);
+
+        $response = $this->client->request('GET', $this->URL . $this::FIND_ENDPOINT, $query);
 
         $metrics = [];
         $foundMetrics = json_decode($response->getBody(), true);
@@ -184,9 +190,11 @@ class Graphite
             ]
         ];
 
-        Logger::debug('Calling render API with query: %s', $query);
+        $url = $this->URL . $this::RENDER_ENDPOINT;
 
-        $response = $this->client->request('GET', $this::RENDER_ENDPOINT, $query);
+        Logger::debug('Calling render API at %s with query: %s', $url, $query);
+
+        $response = $this->client->request('GET', $url, $query);
 
         return $response;
     }
