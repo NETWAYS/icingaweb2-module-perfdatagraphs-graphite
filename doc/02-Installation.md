@@ -8,11 +8,11 @@ Afterwards you can install the package on these supported systems.
 
 **RHEL or compatible:**
 
-`dnf install icingaweb2-module-perfdatagraphs-influxdbv1`
+`dnf install icingaweb2-module-perfdatagraphs-graphite`
 
 **Ubuntu/Debian:**
 
-`apt install icingaweb2-module-perfdatagraphs-influxdbv1`
+`apt install icingaweb2-module-perfdatagraphs-graphite`
 
 
 ## From source
