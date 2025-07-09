@@ -1,5 +1,20 @@
 # Installation
 
+## Packages
+
+To install the module via package manager, follow the setup instructions for the **extras** repo from [packages.netways.de](https://packages.netways.de/).
+
+Afterwards you can install the package on these supported systems.
+
+**RHEL or compatible:**
+
+`dnf install icingaweb2-module-perfdatagraphs-graphite`
+
+**Ubuntu/Debian:**
+
+`apt install icingaweb2-module-perfdatagraphs-graphite`
+
+
 ## From source
 
 1. Clone a Icinga Web Performance Data Graphs Backend repository into `/usr/share/icingaweb2/modules/perfdatagraphsgraphite/`
