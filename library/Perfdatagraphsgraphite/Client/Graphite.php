@@ -324,7 +324,8 @@ class Graphite
         $timeout = (int) $moduleConfig->get('graphite', 'api_timeout', $default['api_timeout']);
         $username = $moduleConfig->get('graphite', 'api_username', $default['api_username']);
         $password = $moduleConfig->get('graphite', 'api_password', $default['api_password']);
-        $tlsVerify = (bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']);
+        // Hint: We use a "skip TLS" logic in the UI, but Guzzle uses "verify TLS"
+        $tlsVerify = !(bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']);
         $hostNameTemplate = $moduleConfig->get('graphite', 'writer_host_name_template', $default['writer_host_name_template']);
         $serviceNameTemplate = $moduleConfig->get('graphite', 'writer_service_name_template', $default['writer_service_name_template']);
 
