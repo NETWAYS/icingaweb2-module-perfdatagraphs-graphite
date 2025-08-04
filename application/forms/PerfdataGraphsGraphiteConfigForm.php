@@ -162,7 +162,8 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         $timeout = (int) $form->getValue('graphite_api_timeout', 10);
         $username = $form->getValue('graphite_api_username', '');
         $password = $form->getValue('graphite_api_password', '');
-        $tlsVerify = (bool) $form->getValue('graphite_api_tls_insecure', false);
+        // Hint: We use a "skip TLS" logic in the UI, but Guzzle uses "verify TLS"
+        $tlsVerify = !(bool) $form->getValue('graphite_api_tls_insecure', false);
         $hostTemplate = $form->getValue('graphite_writer_host_name_template', '');
         $serviceTemplate = $form->getValue('graphite_writer_service_name_template', '');
 
