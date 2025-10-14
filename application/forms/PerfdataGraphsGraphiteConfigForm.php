@@ -47,6 +47,13 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
             'placeholder' => 10,
         ]);
 
+        $this->addElement('number', 'graphite_max_data_points', [
+            'label' => t('The maximum numbers of datapoints each series returns'),
+            'description' => t('The maximum numbers of datapoints each series returns. Should be higher than 0'),
+            'required' => false,
+            'placeholder' => 10000,
+        ]);
+
         $this->addElement('checkbox', 'graphite_api_tls_insecure', [
             'description' => t('Skip the TLS verification'),
             'label' => t('Skip the TLS verification')
@@ -160,6 +167,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
     {
         $baseURI = $form->getValue('graphite_api_url', 'http://localhost:8081');
         $timeout = (int) $form->getValue('graphite_api_timeout', 10);
+        $maxDataPoints = (int) $form->getValue('graphite_max_data_points', 10000);
         $username = $form->getValue('graphite_api_username', '');
         $password = $form->getValue('graphite_api_password', '');
         // Hint: We use a "skip TLS" logic in the UI, but Guzzle uses "verify TLS"
@@ -168,7 +176,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         $serviceTemplate = $form->getValue('graphite_writer_service_name_template', '');
 
         try {
-            $c = new Graphite($baseURI, $username, $password, $timeout, $tlsVerify, $hostTemplate, $serviceTemplate);
+            $c = new Graphite($baseURI, $username, $password, $timeout, $tlsVerify, $maxDataPoints, $hostTemplate, $serviceTemplate);
         } catch (Exception $e) {
             return ['output' => 'General error: ' . $e->getMessage(), 'error' => true];
         }
