@@ -29,6 +29,7 @@ class Graphite
     protected string $URL;
     protected string $hostNameTemplate;
     protected string $serviceNameTemplate;
+    protected int $maxDataPoints;
 
     public function __construct(
         string $baseURI,
@@ -36,6 +37,7 @@ class Graphite
         string $password,
         int $timeout,
         bool $tlsVerify,
+        int $maxDataPoints,
         string $hostNameTemplate,
         string $serviceNameTemplate
     ) {
@@ -47,6 +49,7 @@ class Graphite
 
         $this->URL = rtrim($baseURI, '/');
 
+        $this->maxDataPoints = $maxDataPoints;
         $this->hostNameTemplate = $hostNameTemplate;
         $this->serviceNameTemplate = $serviceNameTemplate;
     }
@@ -141,11 +144,6 @@ class Graphite
 
         $metrics = $this->filterMetrics($metrics, $includeMetrics, $excludeMetrics);
 
-        // TODO: This a bit hacky and obscure, but since we load everything at once
-        // that can cause the memory to be exhausted. We should either
-        // optimize this module, or the perfdata design in general.
-        $metrics = array_slice($metrics, 0, 10);
-
         Logger::debug('Found and included/excluded metrics: %s', $metrics);
 
         return $metrics;
@@ -186,6 +184,7 @@ class Graphite
             'query' => [
                 'target' => $target,
                 'from' => $from,
+                'maxDataPoints' => $this->maxDataPoints,
                 'format' => 'json',
             ]
         ];
@@ -305,6 +304,7 @@ class Graphite
             'api_username' => '',
             'api_password' => '',
             'api_tls_insecure' => false,
+            'api_max_data_points' => 10000,
             'writer_host_name_template' => 'icinga2.$host.name$.host.$host.check_command$',
             'writer_service_name_template' => 'icinga2.$host.name$.services.$service.name$.$service.check_command$',
         ];
@@ -324,12 +324,13 @@ class Graphite
         $timeout = (int) $moduleConfig->get('graphite', 'api_timeout', $default['api_timeout']);
         $username = $moduleConfig->get('graphite', 'api_username', $default['api_username']);
         $password = $moduleConfig->get('graphite', 'api_password', $default['api_password']);
+        $maxDataPoints = (int) $moduleConfig->get('graphite', 'api_max_data_points', $default['api_max_data_points']);
         // Hint: We use a "skip TLS" logic in the UI, but Guzzle uses "verify TLS"
         $tlsVerify = !(bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']);
         $hostNameTemplate = $moduleConfig->get('graphite', 'writer_host_name_template', $default['writer_host_name_template']);
         $serviceNameTemplate = $moduleConfig->get('graphite', 'writer_service_name_template', $default['writer_service_name_template']);
 
-        return new static($baseURI, $username, $password, $timeout, $tlsVerify, $hostNameTemplate, $serviceNameTemplate);
+        return new static($baseURI, $username, $password, $timeout, $tlsVerify, $maxDataPoints, $hostNameTemplate, $serviceNameTemplate);
     }
 
     /**
