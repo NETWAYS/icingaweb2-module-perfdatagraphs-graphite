@@ -2,8 +2,13 @@
 
 namespace Icinga\Module\Perfdatagraphsgraphite\Client;
 
+use Icinga\Module\Perfdatagraphs\Icingadb\CustomVarsHelper as IcinaDBCVH;
+use Icinga\Module\Perfdatagraphs\Ido\CustomVarsHelper as IdoCVH;
+use Icinga\Module\Perfdatagraphs\ProvidedHook\Icingadb\IcingadbSupport;
+
 use Icinga\Application\Config;
 use Icinga\Application\Logger;
+use Icinga\Application\Modules\Module;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
@@ -235,17 +240,21 @@ class Graphite
      */
     public function parseTemplate(string $hostName, string $serviceName, string $checkCommand, bool $isHostCheck, string $metricNames): string
     {
-        // Sanitize query parameters for Graphite
-        $hostName = self::sanitizePath($hostName);
-        $serviceName = self::sanitizePath($serviceName);
-        $checkCommand = self::sanitizePath($checkCommand);
+        if (Module::exists('icingadb') && IcingadbSupport::useIcingaDbAsBackend()) {
+            Logger::debug('Used IcingaDB as database backend');
+            $cvh = new IcinaDBCVH();
+        } else {
+            Logger::debug('Used IDO as database backend');
+            $cvh = new IdoCVH();
+        }
 
-        // Build the query string based on the service we are given
-        $template = str_replace(
-            ['$host.name$', '$service.name$', '$service.check_command$'],
-            [$hostName, $serviceName, $checkCommand],
-            $this->serviceNameTemplate
-        );
+        // Get the object so that we can get its custom variables.
+        $object = $cvh->getObjectFromString($hostName, $serviceName, $isHostCheck);
+
+        // Sanitize query parameters for Graphite
+        $hostNameClean = self::sanitizePath($hostName);
+        $serviceNameClean = self::sanitizePath($serviceName);
+        $checkCommandClean = self::sanitizePath($checkCommand);
 
         if ($isHostCheck) {
             $template = str_replace(
@@ -253,6 +262,16 @@ class Graphite
                 [$hostName, $checkCommand],
                 $this->hostNameTemplate
             );
+
+            $template = $cvh->expandMacros($template, $object);
+        } else {
+            $template = str_replace(
+                ['$host.name$', '$service.name$', '$service.check_command$'],
+                [$hostName, $serviceName, $checkCommand],
+                $this->serviceNameTemplate
+            );
+
+            $template = $cvh->expandMacros($template, $object);
         }
 
         return $template . sprintf('.perfdata.%s', $metricNames);
