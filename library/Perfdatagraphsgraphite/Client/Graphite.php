@@ -2,8 +2,8 @@
 
 namespace Icinga\Module\Perfdatagraphsgraphite\Client;
 
-use Icinga\Module\Perfdatagraphs\Icingadb\CustomVarsHelper as IcinaDBCVH;
-use Icinga\Module\Perfdatagraphs\Ido\CustomVarsHelper as IdoCVH;
+use Icinga\Module\Perfdatagraphs\Icingadb\IcingaObjectHelper as IcinaDBCVH;
+use Icinga\Module\Perfdatagraphs\Ido\IcingaObjectHelper as IdoCVH;
 use Icinga\Module\Perfdatagraphs\ProvidedHook\Icingadb\IcingadbSupport;
 
 use Icinga\Application\Config;
