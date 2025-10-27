@@ -258,7 +258,7 @@ class Graphite
         if ($isHostCheck) {
             $template = str_replace(
                 ['$host.name$', '$host.check_command$'],
-                [$hostName, $checkCommand],
+                [$hostNameClean, $checkCommandClean],
                 $this->hostNameTemplate
             );
 
@@ -266,7 +266,7 @@ class Graphite
         } else {
             $template = str_replace(
                 ['$host.name$', '$service.name$', '$service.check_command$'],
-                [$hostName, $serviceName, $checkCommand],
+                [$hostNameClean, $serviceNameClean, $checkCommandClean],
                 $this->serviceNameTemplate
             );
 
