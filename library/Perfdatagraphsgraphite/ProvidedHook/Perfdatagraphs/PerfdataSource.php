@@ -9,7 +9,7 @@ use Icinga\Module\Perfdatagraphs\Hook\PerfdataSourceHook;
 use Icinga\Module\Perfdatagraphs\Model\PerfdataRequest;
 use Icinga\Module\Perfdatagraphs\Model\PerfdataResponse;
 
-use Icinga\Application\Logger;
+use Icinga\Application\Benchmark;
 
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ConnectException;
@@ -31,6 +31,8 @@ class PerfdataSource extends PerfdataSourceHook
         $from = Graphite::parseDuration($now, $req->getDuration());
 
         $perfdataresponse = new PerfdataResponse();
+
+        Benchmark::measure('Fetching performance data from Graphite');
 
         // Create a client and get the data from the API
         try {
@@ -70,13 +72,19 @@ class PerfdataSource extends PerfdataSourceHook
             $perfdataresponse->addError($e->getMessage());
         }
 
+        Benchmark::measure('Fetched performance data from Graphite');
+
         // Why even bother when we have errors here
         if ($perfdataresponse->hasErrors()) {
             return $perfdataresponse;
         }
 
+        Benchmark::measure('Transforming performance data from Graphite');
+
         // Transform into the PerfdataSourceHook format
         $perfdataresponse = Transformer::transform($response, $req->getCheckcommand());
+
+        Benchmark::measure('Transformed performance data from Graphite');
 
         return $perfdataresponse;
     }
