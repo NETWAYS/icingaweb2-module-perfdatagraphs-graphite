@@ -1,5 +1,3 @@
-**Note:** This is an early release that is still in development and prone to change
-
 # Icinga Web Performance Data Graphs Graphite Backend
 
 A Graphite backend for the Icinga Web Performance Data Graphs Module.
@@ -12,6 +10,7 @@ This module requires the frontend module:
 
 * PHP version ≥ 8.0
 * IcingaDB or IDO Database
+* A Graphite compatible API to fetch the data from (Graphite, carbonapi, VictoriaMetrics, etc.)
 
 ## Known Issues
 
