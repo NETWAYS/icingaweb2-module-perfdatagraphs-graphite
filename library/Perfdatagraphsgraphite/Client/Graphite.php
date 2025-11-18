@@ -189,10 +189,14 @@ class Graphite
             'query' => [
                 'target' => $target,
                 'from' => $from,
-                'maxDataPoints' => $this->maxDataPoints,
                 'format' => 'json',
             ]
         ];
+
+
+        if ($this->maxDataPoints > 0) {
+            $query['query']['maxDataPoints'] = $this->maxDataPoints;
+        }
 
         $url = $this->URL . $this::RENDER_ENDPOINT;
 
@@ -323,7 +327,7 @@ class Graphite
             'api_username' => '',
             'api_password' => '',
             'api_tls_insecure' => false,
-            'api_max_data_points' => 10000,
+            'max_data_points' => 10000,
             'writer_host_name_template' => 'icinga2.$host.name$.host.$host.check_command$',
             'writer_service_name_template' => 'icinga2.$host.name$.services.$service.name$.$service.check_command$',
         ];
@@ -343,7 +347,7 @@ class Graphite
         $timeout = (int) $moduleConfig->get('graphite', 'api_timeout', $default['api_timeout']);
         $username = $moduleConfig->get('graphite', 'api_username', $default['api_username']);
         $password = $moduleConfig->get('graphite', 'api_password', $default['api_password']);
-        $maxDataPoints = (int) $moduleConfig->get('graphite', 'api_max_data_points', $default['api_max_data_points']);
+        $maxDataPoints = (int) $moduleConfig->get('graphite', 'max_data_points', $default['max_data_points']);
         // Hint: We use a "skip TLS" logic in the UI, but Guzzle uses "verify TLS"
         $tlsVerify = !(bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']);
         $hostNameTemplate = $moduleConfig->get('graphite', 'writer_host_name_template', $default['writer_host_name_template']);

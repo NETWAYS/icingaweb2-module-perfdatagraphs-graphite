@@ -49,7 +49,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
 
         $this->addElement('number', 'graphite_max_data_points', [
             'label' => t('The maximum numbers of datapoints each series returns'),
-            'description' => t('The maximum numbers of datapoints each series returns. Should be higher than 0'),
+            'description' => t('The maximum numbers of datapoints each series returns. You can disable aggregation by setting this to 0.'),
             'required' => false,
             'placeholder' => 10000,
         ]);

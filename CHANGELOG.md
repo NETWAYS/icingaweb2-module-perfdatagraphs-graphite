@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.1
+
+- Fix maxDataPoints configuration not being used
+
 ## v0.2.0
 
 - Macros in templates are now resolved
