@@ -39,3 +39,12 @@ To install this module, follow the setup instructions for the **extras** reposit
 
 `max_data_points` is used for downsampling data. It uses the `maxDataPoints` option at the Graphite API.
 If for any output series the number of datapoints in a selected range exceeds the maxDataPoints value then the datapoints over the whole period are consolidated.
+
+## Graphite Storage-Schema
+
+The interaction between Graphite's storage schemas and Icinga's check intervals may result in Graphite being unable to aggregate metrics properly. This may result in empty charts.
+
+Further information:
+
+- https://icinga.com/docs/icinga-2/latest/doc/14-features/#graphite-carbon-cache-writer
+- https://graphite.readthedocs.io/en/stable/config-carbon.html#storage-schemas-conf
