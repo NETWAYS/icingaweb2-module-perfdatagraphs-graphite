@@ -73,7 +73,7 @@ class Graphite
             ]
         ];
 
-        $url = $this->URL . $this::METRICS_ENDPOINT;
+        $url = $this->URL . $this::FIND_ENDPOINT;
 
         try {
             $response = $this->client->request('GET', $url, $query);
