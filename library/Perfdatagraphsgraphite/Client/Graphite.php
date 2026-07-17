@@ -28,9 +28,7 @@ class Graphite
     protected const METRICS_ENDPOINT = '/metrics';
     protected const FIND_ENDPOINT = '/metrics/find';
 
-    /** @var $this \Icinga\Application\Modules\Module */
-    protected $client = null;
-
+    protected \GuzzleHttp\Client $client;
     protected string $URL;
     protected string $hostNameTemplate;
     protected string $serviceNameTemplate;
@@ -76,6 +74,8 @@ class Graphite
         $url = $this->URL . $this::FIND_ENDPOINT;
 
         $query = array_merge($query, $this->getAuth());
+
+        var_dump($query);
 
         try {
             $response = $this->client->request('GET', $url, $query);
@@ -142,7 +142,7 @@ class Graphite
         $response = $this->client->request('GET', $this->URL . $this::FIND_ENDPOINT, $query);
 
         $metrics = [];
-        $foundMetrics = json_decode($response->getBody(), true);
+        $foundMetrics = json_decode($response->getBody()->getContents(), true);
 
         // We just care about the name of the metric
         foreach ($foundMetrics as $metric) {
@@ -160,20 +160,18 @@ class Graphite
 
     protected function getAuth(): array
     {
+        $method = $this->auth['method'] ?? 'none';
+
         $authOptions = [];
 
-        if ($this->auth['method'] === 'none') {
-            return $authOptions;
-        }
-
-        if ($this->auth['method'] === 'basic') {
+        if ($method === 'basic') {
             $authOptions['auth'] = [
                 $this->auth['username'] ?? '',
                 $this->auth['password'] ?? ''
             ];
         }
 
-        if ($this->auth['method'] === 'token') {
+        if ($method === 'token') {
             $t = $this->auth['tokentype'] ?? 'Bearer';
             $v = $this->auth['tokenvalue'] ?? '';
             $authOptions['headers'] = [
@@ -181,16 +179,17 @@ class Graphite
             ];
         }
 
-        // mTLS
-        if ($this->auth['mtls'] === false) {
+        $mtls = $this->auth['mtls'] ?? false;
+
+        if ($mtls === false) {
             return $authOptions;
         }
 
-        if ($this->auth['mtls']) {
-            $authOptions['cert'] = $this->auth['mtls_cert'];
-            $authOptions['ssl_key'] = $this->auth['mtls_key'];
+        if ($mtls) {
+            $authOptions['cert'] = $this->auth['mtls_cert'] ?? '';
+            $authOptions['ssl_key'] = $this->auth['mtls_key'] ?? '';
             if ($this->auth['mtls_ca'] !== '') {
-                $authOptions['verify'] = $this->auth['mtls_ca'];
+                $authOptions['verify'] = $this->auth['mtls_ca'] ?? '';
             }
         }
 
@@ -256,23 +255,22 @@ class Graphite
      * parseDuration parses the duration string from the frontend
      * into something we can use with the Graphite API (from parameter).
      *
+     * @param DateTime $now current time (used in testing)
      * @param string $duration ISO8601 Duration
-     * @param string $now current time (used in testing)
      * @return string
      */
     public static function parseDuration(\DateTime $now, string $duration): string
     {
         try {
-            $int = new DateInterval($duration);
+            $interval = new DateInterval($duration);
         } catch (Exception $e) {
             Logger::error('Failed to parse date interval: %s', $e);
-            $int = new DateInterval('PT12H');
+            $interval = new DateInterval('PT12H');
         }
 
         // Subtract the interval from the current time so that we have
         // the 'from' parameter for graphite
-        $now->sub($int);
-        return $now->getTimestamp();
+        return (clone $now)->sub($interval)->getTimestamp();
     }
 
     /**
@@ -391,7 +389,15 @@ class Graphite
                 $moduleConfig = Config::module('perfdatagraphsgraphite');
             } catch (Exception $e) {
                 Logger::error('Failed to load Perfdata Graphs Graphite module configuration: %s', $e);
-                return $default;
+                return new static(
+                    baseURI: $default['api_url'],
+                    timeout: $default['api_timeout'],
+                    tlsVerify: true,
+                    maxDataPoints: $default['max_data_points'],
+                    hostNameTemplate: $default['writer_host_name_template'],
+                    serviceNameTemplate: $default['writer_service_name_template'],
+                    auth: []
+                );
             }
         }
 
@@ -433,7 +439,8 @@ class Graphite
             maxDataPoints: $maxDataPoints,
             hostNameTemplate: $hostNameTemplate,
             serviceNameTemplate: $serviceNameTemplate,
-            auth: $auth);
+            auth: $auth
+        );
     }
 
     /**
@@ -448,7 +455,7 @@ class Graphite
      */
     public static function sanitizePath(string $path): string
     {
-        if (!is_string($path) || empty($path)) {
+        if ($path === '') {
             return '';
         }
 
