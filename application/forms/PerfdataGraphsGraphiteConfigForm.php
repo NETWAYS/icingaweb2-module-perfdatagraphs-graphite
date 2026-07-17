@@ -79,7 +79,7 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
             'class' => 'autosubmit',
         ]);
 
-        if ($formData['graphite_api_auth_mtls'] === '1') {
+        if (isset($formData['graphite_api_auth_mtls']) && $formData['graphite_api_auth_mtls'] === '1') {
             $this->addElement('text', 'graphite_api_auth_mtls_cert', [
                 'label' => t('mTLS client certificate path'),
                 'description' => t('Path to the client certificate'),
