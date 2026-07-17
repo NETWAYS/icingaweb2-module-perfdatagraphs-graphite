@@ -35,20 +35,19 @@ class Graphite
     protected string $hostNameTemplate;
     protected string $serviceNameTemplate;
     protected int $maxDataPoints;
+    protected array $auth;
 
     public function __construct(
         string $baseURI,
-        string $username,
-        string $password,
         int $timeout,
         bool $tlsVerify,
         int $maxDataPoints,
         string $hostNameTemplate,
-        string $serviceNameTemplate
+        string $serviceNameTemplate,
+        array $auth = [],
     ) {
         $this->client = new Client([
             'timeout' => $timeout,
-            'auth' => [$username, $password],
             'verify' => $tlsVerify
         ]);
 
@@ -57,6 +56,7 @@ class Graphite
         $this->maxDataPoints = $maxDataPoints;
         $this->hostNameTemplate = $hostNameTemplate;
         $this->serviceNameTemplate = $serviceNameTemplate;
+        $this->auth = $auth;
     }
 
     /**
@@ -74,6 +74,8 @@ class Graphite
         ];
 
         $url = $this->URL . $this::FIND_ENDPOINT;
+
+        $query = array_merge($query, $this->getAuth());
 
         try {
             $response = $this->client->request('GET', $url, $query);
@@ -133,6 +135,8 @@ class Graphite
 
         $url = $this->URL . $this::FIND_ENDPOINT;
 
+        $query = array_merge($query, $this->getAuth());
+
         Logger::debug('Calling findMetric API at %s with query: %s', $url, $query);
 
         $response = $this->client->request('GET', $this->URL . $this::FIND_ENDPOINT, $query);
@@ -152,6 +156,45 @@ class Graphite
         Logger::debug('Found and included/excluded metrics: %s', $metrics);
 
         return $metrics;
+    }
+
+    protected function getAuth(): array
+    {
+        $authOptions = [];
+
+        if ($this->auth['method'] === 'none') {
+            return $authOptions;
+        }
+
+        if ($this->auth['method'] === 'basic') {
+            $authOptions['auth'] = [
+                $this->auth['username'] ?? '',
+                $this->auth['password'] ?? ''
+            ];
+        }
+
+        if ($this->auth['method'] === 'token') {
+            $t = $this->auth['tokentype'] ?? 'Bearer';
+            $v = $this->auth['tokenvalue'] ?? '';
+            $authOptions['headers'] = [
+                    'Authorization' =>  $t .' '. $v,
+            ];
+        }
+
+        // mTLS
+        if ($this->auth['mtls'] === false) {
+            return $authOptions;
+        }
+
+        if ($this->auth['mtls']) {
+            $authOptions['cert'] = $this->auth['mtls_cert'];
+            $authOptions['ssl_key'] = $this->auth['mtls_key'];
+            if ($this->auth['mtls_ca'] !== '') {
+                $authOptions['verify'] = $this->auth['mtls_ca'];
+            }
+        }
+
+        return $authOptions;
     }
 
     /**
@@ -197,6 +240,8 @@ class Graphite
         if ($this->maxDataPoints > 0) {
             $query['query']['maxDataPoints'] = $this->maxDataPoints;
         }
+
+        $query = array_merge($query, $this->getAuth());
 
         $url = $this->URL . $this::RENDER_ENDPOINT;
 
@@ -324,8 +369,15 @@ class Graphite
         $default = [
             'api_url' => 'http://localhost:8081',
             'api_timeout' => 10,
-            'api_username' => '',
-            'api_password' => '',
+            'api_auth_method' => 'none',
+            'api_auth_tokentype' => 'Bearer',
+            'api_auth_tokenvalue' => '',
+            'api_auth_username' => '',
+            'api_auth_password' => '',
+            'api_auth_mtls' => false,
+            'api_auth_mtls_cert' => '',
+            'api_auth_mtls_key' => '',
+            'api_auth_mtls_ca' => '',
             'api_tls_insecure' => false,
             'max_data_points' => 10000,
             'writer_host_name_template' => 'icinga2.$host.name$.host.$host.check_command$',
@@ -345,15 +397,43 @@ class Graphite
 
         $baseURI = rtrim($moduleConfig->get('graphite', 'api_url', $default['api_url']), '/');
         $timeout = (int) $moduleConfig->get('graphite', 'api_timeout', $default['api_timeout']);
-        $username = $moduleConfig->get('graphite', 'api_username', $default['api_username']);
-        $password = $moduleConfig->get('graphite', 'api_password', $default['api_password']);
         $maxDataPoints = (int) $moduleConfig->get('graphite', 'max_data_points', $default['max_data_points']);
+        // Auth values
+        $authMethod = $moduleConfig->get('graphite', 'api_auth_method', $default['api_auth_method']);
+        $authTokenType = $moduleConfig->get('graphite', 'api_auth_tokentype', $default['api_auth_tokentype']);
+        $authTokenValue = $moduleConfig->get('graphite', 'api_auth_tokenvalue', $default['api_auth_tokenvalue']);
+        $authUsername = $moduleConfig->get('graphite', 'api_auth_username', $default['api_auth_username']);
+        $authPassword = $moduleConfig->get('graphite', 'api_auth_password', $default['api_auth_password']);
+        // mTLS values
+        $authMTLS = $moduleConfig->get('graphite', 'api_auth_mtls', $default['api_auth_mtls']);
+        $authMTLSCert = $moduleConfig->get('graphite', 'api_auth_mtls_cert', $default['api_auth_mtls_cert']);
+        $authMTLSKey = $moduleConfig->get('graphite', 'api_auth_mtls_key', $default['api_auth_mtls_key']);
+        $authMTLSCA = $moduleConfig->get('graphite', 'api_auth_mtls_ca', $default['api_auth_mtls_ca']);
         // Hint: We use a "skip TLS" logic in the UI, but Guzzle uses "verify TLS"
         $tlsVerify = !(bool) $moduleConfig->get('graphite', 'api_tls_insecure', $default['api_tls_insecure']);
         $hostNameTemplate = $moduleConfig->get('graphite', 'writer_host_name_template', $default['writer_host_name_template']);
         $serviceNameTemplate = $moduleConfig->get('graphite', 'writer_service_name_template', $default['writer_service_name_template']);
 
-        return new static($baseURI, $username, $password, $timeout, $tlsVerify, $maxDataPoints, $hostNameTemplate, $serviceNameTemplate);
+        $auth = [
+            'method' => mb_strtolower($authMethod),
+            'tokentype' => $authTokenType,
+            'tokenvalue' => $authTokenValue,
+            'username' => $authUsername,
+            'password' => $authPassword,
+            'mtls' => $authMTLS,
+            'mtls_cert' => $authMTLSCert,
+            'mtls_key' => $authMTLSKey,
+            'mtls_ca' => $authMTLSCA,
+        ];
+
+        return new static(
+            baseURI: $baseURI,
+            timeout: $timeout,
+            tlsVerify: $tlsVerify,
+            maxDataPoints: $maxDataPoints,
+            hostNameTemplate: $hostNameTemplate,
+            serviceNameTemplate: $serviceNameTemplate,
+            auth: $auth);
     }
 
     /**
