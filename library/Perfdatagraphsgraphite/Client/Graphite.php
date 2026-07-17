@@ -103,7 +103,7 @@ class Graphite
      * @param string $from specifies the beginning for which to fetch the data
      * @param bool $isHostCheck is this a host check or not
      * @param array $includeMetrics metrics to include
-     * @param array $excludeMetrics metrics to exlude
+     * @param array $excludeMetrics metrics to exclude
      *
      * @throws ConnectException
      * @throws RequestException
@@ -224,7 +224,7 @@ class Graphite
             $int = new DateInterval('PT12H');
         }
 
-        // Subtract the inverval from the current time so that we have
+        // Subtract the interval from the current time so that we have
         // the 'from' parameter for graphite
         $now->sub($int);
         return $now->getTimestamp();

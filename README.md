@@ -8,7 +8,7 @@ This module requires the frontend module:
 
 ## Installation Requirements
 
-* PHP version ≥ 8.0
+* PHP version ≥ 8.2
 * Icinga2 GraphiteWriter
 * IcingaDB or IDO Database
 * A Graphite compatible API to fetch the data from (Graphite, carbonapi, VictoriaMetrics, etc.)

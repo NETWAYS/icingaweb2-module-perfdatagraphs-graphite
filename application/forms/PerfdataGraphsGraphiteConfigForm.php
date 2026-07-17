@@ -10,6 +10,8 @@ use Exception;
 
 /**
  * PerfdataGraphsGraphiteConfigForm represents the configuration form for the PerfdataGraphs Graphite Module.
+ * TODO: Icinga Web 2.14 introduced a new Web\Form\ConfigForm, we can migrate when 2.14 is more prevalent
+ * Then we can also use ipl Validators.
  */
 class PerfdataGraphsGraphiteConfigForm extends ConfigForm
 {
