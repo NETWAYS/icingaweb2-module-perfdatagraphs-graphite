@@ -28,6 +28,9 @@ class Graphite
     protected const METRICS_ENDPOINT = '/metrics';
     protected const FIND_ENDPOINT = '/metrics/find';
 
+    protected const SANITIZE_PATTERNS = ['/\s+/', '/\//', '/\./', '/,/'];
+    protected const SANITIZE_REPLACEMENTS = ['_', '_', '_', '\,'];
+
     protected \GuzzleHttp\Client $client;
     protected string $URL;
     protected string $hostNameTemplate;
@@ -74,8 +77,6 @@ class Graphite
         $url = $this->URL . $this::FIND_ENDPOINT;
 
         $query = array_merge($query, $this->getAuth());
-
-        var_dump($query);
 
         try {
             $response = $this->client->request('GET', $url, $query);
@@ -188,7 +189,7 @@ class Graphite
         if ($mtls) {
             $authOptions['cert'] = $this->auth['mtls_cert'] ?? '';
             $authOptions['ssl_key'] = $this->auth['mtls_key'] ?? '';
-            if ($this->auth['mtls_ca'] !== '') {
+            if (($this->auth['mtls_ca'] ?? '') !== '') {
                 $authOptions['verify'] = $this->auth['mtls_ca'] ?? '';
             }
         }
@@ -459,17 +460,6 @@ class Graphite
             return '';
         }
 
-        $replace = [
-            '/\s+/' => '_',
-            '/\//' => '_',
-            '/\./' => '_',
-            '/,/' => '\,',
-        ];
-
-        return preg_replace(
-            array_keys($replace),
-            array_values($replace),
-            trim($path)
-        );
+        return preg_replace(self::SANITIZE_PATTERNS, self::SANITIZE_REPLACEMENTS, trim($path));
     }
 }
