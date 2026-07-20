@@ -1,0 +1,19 @@
+{
+    "require-dev": {
+        "overtrue/phplint": "^9.7",
+        "phpunit/phpunit": "^13.2",
+        "phpbench/phpbench": "^1.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Icinga\\Module\\Perfdatagraphsgraphite\\": "library/Perfdatagraphsgraphite/",
+            "Icinga\\Module\\Perfdatagraphs\\": "_libraries/perfdatagraphs/library/Perfdatagraphs",
+            "GuzzleHttp\\Psr7\\": "_libraries/vendor/vendor/guzzlehttp/psr7/src/",
+            "Psr\\Http\\Message\\": "_libraries/vendor/vendor/psr/http-message/src/",
+            "ipl\\I18n\\": "_libraries/ipl/vendor/ipl/i18n/src/",
+            "ipl\\Stdlib\\": "_libraries/ipl/vendor/ipl/stdlib/src/",
+            "ipl\\": "_libraries/ipl/vendor/ipl/",
+            "Icinga\\": "_icingaweb2/library/Icinga/"
+        }
+    }
+}

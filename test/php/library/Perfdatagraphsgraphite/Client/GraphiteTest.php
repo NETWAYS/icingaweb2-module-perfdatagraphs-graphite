@@ -10,31 +10,18 @@ use PHPUnit\Framework\TestCase;
 
 final class GraphiteTest extends TestCase
 {
-    public function test_parsetemplate()
-    {
-        $c = new Graphite('base', 'user', 'passed', 10, false, 'icinga2.$host.name$.host.$host.check_command$', 'icinga2.$host.name$.services.$service.name$.$service.check_command$');
-
-        $actual = $c->parseTemplate('myhost', 'myservice', 'checkme', false, 'foobar');
-        $expected = 'icinga2.myhost.services.myservice.checkme.perfdata.foobar';
-        $this->assertEquals($expected, $actual);
-
-        $actual = $c->parseTemplate('myhost', 'hostalive', 'checkme', true, '*');
-        $expected = 'icinga2.myhost.host.checkme.perfdata.*';
-        $this->assertEquals($expected, $actual);
-    }
-
     public function test_parseduration()
     {
         $now = new DateTime('1986-04-26 01:23:40');
 
         $actual = Graphite::parseDuration($now, 'PT1H');
-        $expected = '00:23_19860426';
+        $expected = '514859020';
         $this->assertEquals($expected, $actual);
 
         $now = new DateTime('1986-04-26 01:23:40');
 
         $actual = Graphite::parseDuration($now, 'P1Y');
-        $expected = '01:23_19850426';
+        $expected = '483326620';
         $this->assertEquals($expected, $actual);
     }
 
@@ -43,7 +30,7 @@ final class GraphiteTest extends TestCase
         $now = new DateTime('1986-04-26 01:23:40');
 
         $actual = Graphite::parseDuration($now, 'phpunit');
-        $expected = '13:23_19860425';
+        $expected = '514819420';
         $this->assertEquals($expected, $actual);
     }
 
@@ -64,7 +51,15 @@ final class GraphiteTest extends TestCase
 
     public function test_filterMetrics()
     {
-        $c = new Graphite('base', 'user', 'passed', 10, false, '', '');
+        $c = new Graphite(
+            baseURI: 'base',
+            timeout: 10,
+            tlsVerify: false,
+            maxDataPoints: 1000,
+            hostNameTemplate: 'icinga2.$host.name$.host.$host.check_command$',
+            serviceNameTemplate: 'icinga2.$host.name$.services.$service.name$.$service.check_command$',
+            auth: [],
+        );
 
         $actual = $c->filterMetrics(
             ['foo', 'bar', 'foobar', 'barfoo', 'uptime', 'excludeme'],
@@ -78,7 +73,15 @@ final class GraphiteTest extends TestCase
 
     public function test_filterMetrics_withExcludeOnly()
     {
-        $c = new Graphite('base', 'user', 'passed', 10, false, '', '');
+        $c = new Graphite(
+            baseURI: 'base',
+            timeout: 10,
+            tlsVerify: false,
+            maxDataPoints: 1000,
+            hostNameTemplate: 'icinga2.$host.name$.host.$host.check_command$',
+            serviceNameTemplate: 'icinga2.$host.name$.services.$service.name$.$service.check_command$',
+            auth: [],
+        );
 
         $actual = $c->filterMetrics(
             ['exclude', 'include', 'excludealso', 'removeme'],
@@ -92,7 +95,15 @@ final class GraphiteTest extends TestCase
 
     public function test_filterMetrics_withIncludeOnly()
     {
-        $c = new Graphite('base', 'user', 'passed', 10, false, '', '');
+        $c = new Graphite(
+            baseURI: 'base',
+            timeout: 10,
+            tlsVerify: false,
+            maxDataPoints: 1000,
+            hostNameTemplate: 'icinga2.$host.name$.host.$host.check_command$',
+            serviceNameTemplate: 'icinga2.$host.name$.services.$service.name$.$service.check_command$',
+            auth: [],
+        );
 
         $actual = $c->filterMetrics(
             ['exclude', 'include', 'excludealso', 'includeme', 'hi'],

@@ -29,13 +29,20 @@ To install this module, follow the setup instructions for the **extras** reposit
 | Option  | Description | Default value  |
 |---------|-------------|----------------|
 | api_url                       | The URL for Graphite including the scheme                                                     | `http://localhost:8081`                                               |
-| api_username                  | The user for HTTP basic auth. Not used if empty                                               |                                                                       |
-| api_password                  | The password for HTTP basic auth. Not used if empty                                           |                                                                       |
 | api_timeout                   | HTTP timeout for the API in seconds. Should be higher than 0                                  | `10` (seconds)                                                        |
 | api_tls_insecure              | Skip the TLS verification                                                                     | `false` (unchecked)                                                   |
 | max_data_points               | The maximum numbers of datapoints each series returns. You can disable aggregation by setting this to 0. | `10000`                                                    |
 | writer_host_name_template     | The value of your Icinga 2 GraphiteWriter's attribute `host_name_template` (if specified)     | `icinga2.$host.name$.host.$host.check_command$`                       |
 | writer_service_name_template  | The value of your Icinga 2 GraphiteWriter's attribute `service_name_template` (if specified)  | `icinga2.$host.name$.services.$service.name$.$service.check_command$` |
+| api_auth_method     | Authentication method to use for the API                                                                  | none (none,basic,token) |
+| api_auth_username    | HTTP basic auth username                                                                                 |   |
+| api_auth_password    | HTTP basic auth password                                                                                 |   |
+| api_auth_tokentype   | Token type for the Authorization header                                                                  | `Bearer` |
+| api_auth_tokenvalue  | Token for the Authorization header                                                                       |   |
+| api_auth_mtls      | Use client certificate (mTLS) for the connection                                                             | `false` |
+| api_auth_mtls_cert | Path to the client certificate file                                                                          |  |
+| api_auth_mtls_key  | Path to the client key file                                                                                  |  |
+| api_auth_mtls_ca   | Path to the client CA file                                                                                   |  |
 
 `max_data_points` is used for downsampling data. It uses the `maxDataPoints` option at the Graphite API.
 If for any output series the number of datapoints in a selected range exceeds the maxDataPoints value then the datapoints over the whole period are consolidated.

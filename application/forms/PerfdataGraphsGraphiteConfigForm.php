@@ -10,6 +10,8 @@ use Exception;
 
 /**
  * PerfdataGraphsGraphiteConfigForm represents the configuration form for the PerfdataGraphs Graphite Module.
+ * TODO: Icinga Web 2.14 introduced a new Web\Form\ConfigForm, we can migrate when 2.14 is more prevalent
+ * Then we can also use ipl Validators.
  */
 class PerfdataGraphsGraphiteConfigForm extends ConfigForm
 {
@@ -29,16 +31,71 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
             'placeholder' => 'http://localhost:8081',
         ]);
 
-        $this->addElement('text', 'graphite_api_username', [
-            'label' => t('API basic auth username'),
-            'description' => t('The user for HTTP basic auth. Not used if empty')
+        $this->addElement('select', 'graphite_api_auth_method', [
+            'label' => 'API authentication method',
+            'description' => 'Authentication method to use for the API',
+            'multiOptions' => [
+                'none' => t('None'),
+                'basic' => 'Basic Auth',
+                'token' => 'Token',
+            ],
+            'class' => 'autosubmit',
+            'required' => false,
         ]);
 
-        $this->addElement('password', 'graphite_api_password', [
-            'label' => t('API HTTP basic auth password'),
-            'description' => t('The password for HTTP basic auth. Not used if empty'),
-            'renderPassword' => true
+        if (isset($formData['graphite_api_auth_method']) && $formData['graphite_api_auth_method'] === 'basic') {
+            $this->addElement('text', 'graphite_api_auth_username', [
+                'label' => t('HTTP basic auth username'),
+                'description' => t('The user for HTTP basic auth'),
+                'required' => true,
+            ]);
+
+            $this->addElement('password', 'graphite_api_auth_password', [
+                'label' => t('HTTP basic auth password'),
+                'description' => t('The password for HTTP basic auth'),
+                'renderPassword' => true,
+                'required' => true,
+            ]);
+        }
+
+        if (isset($formData['graphite_api_auth_method']) && $formData['graphite_api_auth_method'] === 'token') {
+            $this->addElement('text', 'graphite_api_auth_tokentype', [
+                'label' => t('Token type for the Authorization header'),
+                'description' => t('API Token type for the Authorization header (default: Bearer)'),
+                'value' => 'Bearer',
+            ]);
+
+            $this->addElement('password', 'graphite_api_auth_tokenvalue', [
+                'label' => t('Token for the Authorization header'),
+                'description' => t('API Token for the Authorization header'),
+                'renderPassword' => true,
+                'required' => true,
+            ]);
+        }
+
+        $this->addElement('checkbox', 'graphite_api_auth_mtls', [
+            'label' => t('Use client certificate (mTLS)'),
+            'description' => t('Use client certificate (mTLS) for the connection'),
+            'class' => 'autosubmit',
         ]);
+
+        if (isset($formData['graphite_api_auth_mtls']) && $formData['graphite_api_auth_mtls'] === '1') {
+            $this->addElement('text', 'graphite_api_auth_mtls_cert', [
+                'label' => t('mTLS client certificate path'),
+                'description' => t('Path to the client certificate'),
+                'required' => true,
+            ]);
+            $this->addElement('text', 'graphite_api_auth_mtls_key', [
+                'label' => t('mTLS client key path'),
+                'description' => t('Path to the client key'),
+                'required' => true,
+            ]);
+            $this->addElement('text', 'graphite_api_auth_mtls_ca', [
+                'label' => t('mTLS client CA path'),
+                'description' => t('Path to the CA. Defaults to system CA'),
+                'required' => false,
+            ]);
+        }
 
         $this->addElement('number', 'graphite_api_timeout', [
             'label' => t('HTTP timeout in seconds'),
@@ -168,15 +225,44 @@ class PerfdataGraphsGraphiteConfigForm extends ConfigForm
         $baseURI = $form->getValue('graphite_api_url', 'http://localhost:8081');
         $timeout = (int) $form->getValue('graphite_api_timeout', 10);
         $maxDataPoints = (int) $form->getValue('graphite_max_data_points', 10000);
-        $username = $form->getValue('graphite_api_username', '');
-        $password = $form->getValue('graphite_api_password', '');
+        // Auth values
+        $authMethod = $form->getValue('graphite_api_auth_method', 'none');
+        $authTokenType = $form->getValue('graphite_api_auth_tokentype', 'Bearer');
+        $authTokenValue = $form->getValue('graphite_api_auth_tokenvalue', '');
+        $authUsername = $form->getValue('graphite_api_auth_username', '');
+        $authPassword = $form->getValue('graphite_api_auth_password', '');
+        // mTLS values
+        $authMTLS = $form->getValue('graphite_api_auth_mtls', false);
+        $authMTLSCert = $form->getValue('graphite_api_auth_mtls_cert', '');
+        $authMTLSKey = $form->getValue('graphite_api_auth_mtls_key', '');
+        $authMTLSCA = $form->getValue('graphite_api_auth_mtls_ca', '');
         // Hint: We use a "skip TLS" logic in the UI, but Guzzle uses "verify TLS"
         $tlsVerify = !(bool) $form->getValue('graphite_api_tls_insecure', false);
         $hostTemplate = $form->getValue('graphite_writer_host_name_template', '');
         $serviceTemplate = $form->getValue('graphite_writer_service_name_template', '');
 
+        $auth = [
+            'method' => mb_strtolower($authMethod),
+            'tokentype' => $authTokenType,
+            'tokenvalue' => $authTokenValue,
+            'username' => $authUsername,
+            'password' => $authPassword,
+            'mtls' => $authMTLS,
+            'mtls_cert' => $authMTLSCert,
+            'mtls_key' => $authMTLSKey,
+            'mtls_ca' => $authMTLSCA,
+        ];
+
         try {
-            $c = new Graphite($baseURI, $username, $password, $timeout, $tlsVerify, $maxDataPoints, $hostTemplate, $serviceTemplate);
+            $c = new Graphite(
+                baseURI: $baseURI,
+                timeout: $timeout,
+                maxDataPoints: $maxDataPoints,
+                tlsVerify: $tlsVerify,
+                hostNameTemplate: $hostTemplate,
+                serviceNameTemplate: $serviceTemplate,
+                auth: $auth,
+            );
         } catch (Exception $e) {
             return ['output' => 'General error: ' . $e->getMessage(), 'error' => true];
         }

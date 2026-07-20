@@ -44,36 +44,23 @@ class Transformer
      * getSeries returns a single Graphite dataseries as a list of datapoints.
      * Used to find 'warn' and 'crit', but we can probably reuse this for 'value'.
      *
-     * @param array $data
-     * @param string $target
+     * @param array $dataset
      * @return SplFixedArray
      */
-    protected static function getSeries(array $data, string $target): SplFixedArray
+    protected static function getSeries(array $dataset): SplFixedArray
     {
-        $series = array_filter($data, function ($item) use ($target) {
-            if ($item['target'] === $target) {
-                return $item;
-            }
-        });
-
-        if (empty($series)) {
-            return SplFixedArray::fromArray([]);
+        if ($dataset === null) {
+            return new SplFixedArray(0);
         }
 
-        $datapoints = $series[array_key_first($series)]['datapoints'];
-
-        $datapointGenerator = function ($datapoints) {
-            $idx = 0;
-            foreach ($datapoints as list($value)) {
-                yield [$idx, $value];
-                $idx++;
-            }
-        };
+        $datapoints = $dataset['datapoints'] ?? [];
 
         $values = new SplFixedArray(count($datapoints));
 
-        foreach ($datapointGenerator($datapoints) as $point) {
-            $values[$point[0]] = $point[1];
+        $idx = 0;
+        foreach ($datapoints as [$value]) {
+            $values[$idx] = $value;
+            $idx++;
         }
 
         return $values;
@@ -88,13 +75,7 @@ class Transformer
      */
     protected static function getDataset(array $data, string $checkCommand = ''): Generator
     {
-        $datapointGenerator = function ($datapoints) {
-            $idx = 0;
-            foreach ($datapoints as list($value, $timestamp)) {
-                yield [$idx, $value, $timestamp];
-                $idx++;
-            }
-        };
+        $byTarget = array_column($data, null, 'target');
 
         // A dataset is single perfdata target, e.g. rta, pl, disk /.
         // A series is a list of datapoints with a label (value, warn, crit)
@@ -114,9 +95,11 @@ class Transformer
             $values = new SplFixedArray(count($dataset['datapoints']));
             $timestamps = new SplFixedArray(count($dataset['datapoints']));
 
-            foreach ($datapointGenerator($dataset['datapoints']) as $point) {
-                $values[$point[0]] = $point[1];
-                $timestamps[$point[0]] = $point[2];
+            $idx = 0;
+            foreach ($dataset['datapoints'] as [$value, $timestamp]) {
+                $values[$idx] = $value;
+                $timestamps[$idx] = $timestamp;
+                $idx++;
             }
 
             $valuesSeries = new PerfdataSeries('value', $values);
@@ -133,14 +116,14 @@ class Transformer
             // Since for graphite it's a unrelated dateset, we gotta find them first.
             // I don't like this... maybe there's better way.
             $warnName = preg_replace('/\.value$/', '.warn', $dataset['target']);
-            $warnSeries = self::getSeries($data, $warnName);
+            $warnSeries = self::getSeries($byTarget[$warnName] ?? []);
             if (count($warnSeries) > 0) {
                 $warnSeries = new PerfdataSeries('warning', $warnSeries);
                 $finalizedDataset->addSeries($warnSeries);
             }
 
             $critName = preg_replace('/\.value$/', '.crit', $dataset['target']);
-            $critSeries = self::getSeries($data, $critName);
+            $critSeries = self::getSeries($byTarget[$critName] ?? []);
             if (count($critSeries) > 0) {
                 $critSeries = new PerfdataSeries('critical', $critSeries);
                 $finalizedDataset->addSeries($critSeries);
@@ -162,15 +145,14 @@ class Transformer
     {
         $pfr = new PerfdataResponse();
 
-        if (empty($response)) {
-            Logger::warning('Did not receive data in response');
-            return $pfr;
-        }
-
-        // Parse the JSON response
-        // TODO: Might be best to stream the data, instead if one big GULP
+        // Might be best to stream the data, instead if one big GULP
         // Did some tests with a CSV stream but it was slower than this.
         $data = json_decode($response->getBody(), true);
+
+        if ($data === null) {
+            Logger::warning('Did not receive valid JSON data in response');
+            return $pfr;
+        }
 
         foreach (self::getDataset($data, $checkCommand) as $dataset) {
             $pfr->addDataset($dataset);
