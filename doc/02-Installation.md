@@ -16,7 +16,7 @@ To install this module, follow the setup instructions for the **extras** reposit
 
 ## From source
 
-1. Clone a Icinga Web Performance Data Graphs Backend repository into `/usr/share/icingaweb2/modules/perfdatagraphsgraphite/`
+1. Clone the Icinga Web Performance Data Graphs Backend repository into `/usr/share/icingaweb2/modules/perfdatagraphsgraphite/`
 
 2. Enable the module using the `Configuration → Modules` menu or the `icingacli`
 
